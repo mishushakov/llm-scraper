@@ -1,6 +1,6 @@
 import z from 'zod'
 import { chromium } from 'playwright'
-import LLMScraper from '../src'
+import LLMScraper from './../src'
 
 // Create a new browser instance
 const browser = await chromium.launch()
@@ -19,7 +19,7 @@ const schema = z.object({
         commentsURL: z.string(),
       })
     )
-    .describe('Top stories on Hacker News'),
+    .describe('Top 5 stories on Hacker News'),
 })
 
 // URLs to scrape
@@ -27,6 +27,7 @@ const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {
+  model: 'gpt-4-turbo',
   schema,
   mode: 'html',
   closeOnFinish: true,
