@@ -14,8 +14,8 @@ type ScraperLoadResult = {
   mode: ScraperLoadOptions['mode']
 }
 
-type ScraperRunOptions = {
-  schema: z.ZodSchema<any>
+type ScraperRunOptions<Z extends z.ZodSchema<any>> = {
+  schema: Z
   model?: OpenAI.Chat.ChatModel
 } & ScraperLoadOptions
 
@@ -93,11 +93,11 @@ export default class LLMScraper {
   }
 
   // Generate completion using OpenAI
-  private async generateCompletions(
+  private async generateCompletions<T extends z.ZodSchema<any>>(
     model: OpenAI.Chat.ChatModel = 'gpt-4-turbo',
-    schema: z.ZodSchema<any>,
+    schema: T,
     pages: ScraperLoadResult[]
-  ) {
+  ): Promise<z.infer<typeof schema>[]> {
     const openai = new OpenAI()
     return pages.map(async (page) => {
       const content = this.preparePage(page)
@@ -120,11 +120,11 @@ export default class LLMScraper {
   }
 
   // Load pages and generate completion
-  async run(
+  async run<T extends z.ZodSchema<any>>(
     url: string | string[],
-    options: ScraperRunOptions
-  ): Promise<z.infer<(typeof options)['schema']>> {
+    options: ScraperRunOptions<T>
+  ) {
     const pages = await this.load(url, options)
-    return this.generateCompletions(options.model, options.schema, pages)
+    return this.generateCompletions<T>(options.model, options.schema, pages)
   }
 }

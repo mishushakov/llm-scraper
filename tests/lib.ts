@@ -9,11 +9,10 @@ const schema = z.object({
   title:z.string().describe('Title of the page'),
 })
 
-type schema = z.infer<typeof schema>
-
 const pages = await scraper.run(['https://example.com'], {
   schema,
-  mode: 'text'
+  mode: 'text',
+  closeOnFinish: true,
 })
 
-console.log(await Promise.all(pages))
+console.log(pages[0])
