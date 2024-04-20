@@ -31,7 +31,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 2. Get an OpenAI API key and set it in your environment variables:
 
     ```
-    export OPENAPI_API_KEY=***
+    export OPENAI_API_KEY=***
     ```
 
 3. Optional. Create a new browser instance and attach LLMScraper to it:
