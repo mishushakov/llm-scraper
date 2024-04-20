@@ -13,8 +13,11 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
-- Supports 3 operating modes: `html`, `text`, `image`
 - Streaming when crawling multiple pages
+- Supports 3 input modes:
+  - `html` for loading raw HTML
+  - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
+  - `image` for loading a screenshot (multi-modal only)
 
 **Make sure to give it a star!**
 
@@ -34,7 +37,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
     export OPENAI_API_KEY=***
     ```
 
-3. Optional. Create a new browser instance and attach LLMScraper to it:
+3. Create a new browser instance and attach LLMScraper to it:
 
     ```js
     import { chromium } from 'playwright'
