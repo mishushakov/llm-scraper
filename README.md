@@ -31,6 +31,16 @@ LLM Scraper converts **any** webpages into structured data using LLMs.
     export OPENAPI_API_KEY=***
     ```
 
+3. Optional. Create a new browser instance and attach LLMScraper to it:
+
+    ```js
+    import { chromium } from 'playwright'
+    import LLMScraper from 'llm-scraper'
+
+    const browser = await chromium.launch()
+    const scraper = new LLMScraper(browser)
+    ```
+
 ## Example
 
 In this example, we're extracting top stories from HackerNews:
