@@ -1,4 +1,4 @@
-import { Browser } from 'playwright'
+import { Browser, BrowserContext } from 'playwright'
 import OpenAI from 'openai'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
@@ -20,12 +20,13 @@ type ScraperRunOptions<Z extends z.ZodSchema<any>> = {
   instructions?: string
 } & ScraperLoadOptions
 
-type ScraperCompletionResult <Z extends z.ZodSchema<any>> = {
+type ScraperCompletionResult<Z extends z.ZodSchema<any>> = {
   data: z.infer<Z> | null
   url: string
 }
 
 export default class LLMScraper {
+  private context: BrowserContext
   constructor(private browser: Browser) {
     this.browser = browser
   }
@@ -33,13 +34,13 @@ export default class LLMScraper {
   // Load pages in the browser
   private async load(
     url: string | string[],
-    options: ScraperLoadOptions = { mode: 'html', closeOnFinish: true }
+    options: ScraperLoadOptions = { mode: 'html' }
   ): Promise<Promise<ScraperLoadResult>[]> {
-    const context = await this.browser.newContext()
+    this.context = await this.browser.newContext()
     const urls = Array.isArray(url) ? url : [url]
 
     const pages = urls.map(async (url) => {
-      const page = await context.newPage()
+      const page = await this.context.newPage()
       await page.goto(url)
 
       let content
@@ -74,11 +75,6 @@ export default class LLMScraper {
       }
     })
 
-    // if (options.closeOnFinish) {
-    //   await context.close()
-    //   await this.browser.close()
-    // }
-
     return pages
   }
 
@@ -98,28 +94,32 @@ export default class LLMScraper {
 
   // Generate completion using OpenAI
   private generateCompletions<T extends z.ZodSchema<any>>(
-    model: OpenAI.Chat.ChatModel = 'gpt-4-turbo',
-    schema: T,
     pages: Promise<ScraperLoadResult>[],
-    instructions?: string
+    options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
     const openai = new OpenAI()
-    return pages.map(async (page) => {
+    return pages.map(async (page, i) => {
       const p = await page
       const content = this.preparePage(p)
       const completion = await openai.chat.completions.create({
-        model,
+        model: options.model || options.mode === 'image' ? 'gpt-4-vision-preview' : 'gpt-4',
         messages: [{ role: 'user', content: [content] }],
         functions: [
           {
             name: 'extract_content',
             description:
-              'Extracts the content from the given page' || instructions,
-            parameters: zodToJsonSchema(schema),
+              'Extracts the content from the given page' ||
+              options.instructions,
+            parameters: zodToJsonSchema(options.schema),
           },
         ],
         function_call: { name: 'extract_content' },
       })
+
+      if (pages.length - 1 === i && options.closeOnFinish) {
+        await this.context.close()
+        await this.browser.close()
+      }
 
       const c = completion.choices[0].message.function_call?.arguments
       return {
@@ -135,11 +135,6 @@ export default class LLMScraper {
     options: ScraperRunOptions<T>
   ) {
     const pages = await this.load(url, options)
-    return this.generateCompletions<T>(
-      options.model,
-      options.schema,
-      pages,
-      options.instructions
-    )
+    return this.generateCompletions<T>(pages, options)
   }
 }

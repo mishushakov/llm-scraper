@@ -9,7 +9,7 @@ const schema = z.object({
   title: z.string().describe('Title of the page'),
 })
 
-const urls = ['https://example.com', 'https://browserbase.com']
+const urls = ['https://example.com']
 
 const pages = await scraper.run(urls, {
   schema,
