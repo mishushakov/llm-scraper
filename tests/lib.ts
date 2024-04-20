@@ -6,13 +6,18 @@ const browser = await chromium.launch()
 const scraper = new LLMScraper(browser)
 
 const schema = z.object({
-  title:z.string().describe('Title of the page'),
+  title: z.string().describe('Title of the page'),
 })
 
-const pages = await scraper.run(['https://example.com'], {
+const urls = ['https://example.com', 'https://browserbase.com']
+
+const pages = await scraper.run(urls, {
   schema,
   mode: 'text',
   closeOnFinish: true,
 })
 
-console.log(pages[0])
+// Stream the pages
+for await (const page of pages) {
+  console.log(page?.title)
+}

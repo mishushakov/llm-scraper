@@ -1,6 +1,6 @@
 import { Browser } from 'playwright'
 import OpenAI from 'openai'
-import { Schema, z } from 'zod'
+import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 type ScraperLoadOptions = {
@@ -28,54 +28,52 @@ export default class LLMScraper {
   private async load(
     url: string | string[],
     options: ScraperLoadOptions = { mode: 'html', closeOnFinish: true }
-  ): Promise<ScraperLoadResult[]> {
+  ): Promise<Promise<ScraperLoadResult>[]> {
     const context = await this.browser.newContext()
     const urls = Array.isArray(url) ? url : [url]
 
-    const content = await Promise.all(
-      urls.map(async (url) => {
-        const page = await context.newPage()
-        await page.goto(url)
+    const pages = urls.map(async (url) => {
+      const page = await context.newPage()
+      await page.goto(url)
 
-        let content
+      let content
 
-        if (options.mode === 'html') {
-          content = await page.content()
-        }
+      if (options.mode === 'html') {
+        content = await page.content()
+      }
 
-        if (options.mode === 'text') {
-          const readable = await page.evaluate(async () => {
-            const readability = await import(
-              // @ts-ignore
-              'https://cdn.skypack.dev/@mozilla/readability'
-            )
+      if (options.mode === 'text') {
+        const readable = await page.evaluate(async () => {
+          const readability = await import(
+            // @ts-ignore
+            'https://cdn.skypack.dev/@mozilla/readability'
+          )
 
-            return new readability.Readability(document).parse()
-          })
+          return new readability.Readability(document).parse()
+        })
 
-          content = `${readable.title}\n${readable.textContent}`
-        }
+        content = `${readable.title}\n${readable.textContent}`
+      }
 
-        if (options.mode === 'image') {
-          const image = await page.screenshot()
-          content = image.toString('base64')
-        }
+      if (options.mode === 'image') {
+        const image = await page.screenshot()
+        content = image.toString('base64')
+      }
 
-        await page.close()
-        return {
-          url,
-          content,
-          mode: options.mode,
-        }
-      })
-    )
+      await page.close()
+      return {
+        url,
+        content,
+        mode: options.mode,
+      }
+    })
 
-    await context.close()
-    if (options.closeOnFinish) {
-      await this.browser.close()
-    }
+    // if (options.closeOnFinish) {
+    //   await context.close()
+    //   await this.browser.close()
+    // }
 
-    return content
+    return pages
   }
 
   // Prepare the pages for further processing
@@ -93,14 +91,14 @@ export default class LLMScraper {
   }
 
   // Generate completion using OpenAI
-  private async generateCompletions<T extends z.ZodSchema<any>>(
+  private generateCompletions<T extends z.ZodSchema<any>>(
     model: OpenAI.Chat.ChatModel = 'gpt-4-turbo',
     schema: T,
-    pages: ScraperLoadResult[]
-  ): Promise<z.infer<typeof schema>[]> {
+    pages: Promise<ScraperLoadResult>[]
+  ): Promise<z.infer<typeof schema>>[] | Promise<null>[] {
     const openai = new OpenAI()
     return pages.map(async (page) => {
-      const content = this.preparePage(page)
+      const content = this.preparePage(await page)
       const completion = await openai.chat.completions.create({
         model,
         messages: [{ role: 'user', content: [content] }],
