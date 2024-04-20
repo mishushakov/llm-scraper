@@ -1,6 +1,6 @@
 # LLM Scraper
 
-<img width="1912" alt="Screenshot 2024-04-20 at 22 08 44" src="https://github.com/mishushakov/llm-scraper/assets/10400064/05f079a4-be93-4307-b6ed-fe4ab6529465">
+<img width="1800" alt="Screenshot 2024-04-20 at 23 11 16" src="https://github.com/mishushakov/llm-scraper/assets/10400064/ab00e048-a9ff-43b6-81d5-2e58090e2e65">
 
 LLM Scraper is a TypeScript library that allows you to convert **any** webpages into structured data using LLMs.
 
