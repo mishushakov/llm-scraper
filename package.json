@@ -5,6 +5,7 @@
   "description": "Turn any webpage intro structured data using LLMs",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,10 +27,12 @@
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
     "openai": "^4.38.2",
-    "zod": "^3.22.5",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
-    "playwright": "^1.43.1"
+    "@types/node": "^20.12.7",
+    "playwright": "^1.43.1",
+    "typescript": "^5.4.5",
+    "zod": "^3.22.5"
   }
 }
