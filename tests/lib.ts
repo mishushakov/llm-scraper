@@ -19,5 +19,5 @@ const pages = await scraper.run(urls, {
 
 // Stream the pages
 for await (const page of pages) {
-  console.log(page?.title)
+  console.log(page.data?.title)
 }

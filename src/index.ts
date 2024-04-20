@@ -17,7 +17,13 @@ type ScraperLoadResult = {
 type ScraperRunOptions<Z extends z.ZodSchema<any>> = {
   schema: Z
   model?: OpenAI.Chat.ChatModel
+  instructions?: string
 } & ScraperLoadOptions
+
+type ScraperCompletionResult <Z extends z.ZodSchema<any>> = {
+  data: z.infer<Z> | null
+  url: string
+}
 
 export default class LLMScraper {
   constructor(private browser: Browser) {
@@ -94,18 +100,21 @@ export default class LLMScraper {
   private generateCompletions<T extends z.ZodSchema<any>>(
     model: OpenAI.Chat.ChatModel = 'gpt-4-turbo',
     schema: T,
-    pages: Promise<ScraperLoadResult>[]
-  ): Promise<z.infer<typeof schema>>[] | Promise<null>[] {
+    pages: Promise<ScraperLoadResult>[],
+    instructions?: string
+  ): Promise<ScraperCompletionResult<T>>[] {
     const openai = new OpenAI()
     return pages.map(async (page) => {
-      const content = this.preparePage(await page)
+      const p = await page
+      const content = this.preparePage(p)
       const completion = await openai.chat.completions.create({
         model,
         messages: [{ role: 'user', content: [content] }],
         functions: [
           {
             name: 'extract_content',
-            description: 'Extracts the content from given pages',
+            description:
+              'Extracts the content from the given page' || instructions,
             parameters: zodToJsonSchema(schema),
           },
         ],
@@ -113,7 +122,10 @@ export default class LLMScraper {
       })
 
       const c = completion.choices[0].message.function_call?.arguments
-      return JSON.parse(c ? c : 'null')
+      return {
+        data: JSON.parse(c ? c : 'null'),
+        url: p.url,
+      }
     })
   }
 
@@ -123,6 +135,11 @@ export default class LLMScraper {
     options: ScraperRunOptions<T>
   ) {
     const pages = await this.load(url, options)
-    return this.generateCompletions<T>(options.model, options.schema, pages)
+    return this.generateCompletions<T>(
+      options.model,
+      options.schema,
+      pages,
+      options.instructions
+    )
   }
 }
