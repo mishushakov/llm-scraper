@@ -2,7 +2,10 @@
 
 <img width="1912" alt="Screenshot 2024-04-20 at 22 08 44" src="https://github.com/mishushakov/llm-scraper/assets/10400064/05f079a4-be93-4307-b6ed-fe4ab6529465">
 
-LLM Scraper converts **any** webpages into structured data using LLMs.
+LLM Scraper is a TypeScript library that allows you to convert **any** webpages into structured data using LLMs.
+
+> [!TIP]
+> Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction)
 
 ### Features
 
