@@ -11,19 +11,19 @@ LLM Scraper helps you to convert any webpages into structured data using LLMs.
 - Supports 3 operating modes: `html`, `text`, `image`
 - Streaming when crawling multiple pages
 
-## Get started
+## Getting started
 
 1. Install the required dependencies from npm:
 
-```
-npm i zod playwright llm-scraper
-```
+  ```
+  npm i zod playwright llm-scraper
+  ```
 
 2. Get an OpenAI API key and set it in your environment variables:
 
-```
-export OPENAPI_API_KEY=***
-```
+  ```
+  export OPENAPI_API_KEY=***
+  ```
 
 ## Example
 
@@ -71,6 +71,6 @@ for await (const page of pages) {
 }
 ```
 
-### Contributing
+## Contributing
 
 As an open-source project, we welcome contributions from the community. If you are experiencing any bugs or want to add some improvements, please feel free to open an issue or pull request.
