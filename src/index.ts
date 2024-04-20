@@ -14,14 +14,14 @@ type ScraperLoadResult = {
   mode: ScraperLoadOptions['mode']
 }
 
-type ScraperRunOptions<Z extends z.ZodSchema<any>> = {
-  schema: Z
+type ScraperRunOptions<T extends z.ZodSchema<any>> = {
+  schema: T
   model?: OpenAI.Chat.ChatModel
   instructions?: string
 } & ScraperLoadOptions
 
-type ScraperCompletionResult<Z extends z.ZodSchema<any>> = {
-  data: z.infer<Z> | null
+type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
+  data: z.infer<T> | null
   url: string
 }
 
