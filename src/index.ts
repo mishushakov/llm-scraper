@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 type ScraperLoadOptions = {
-  mode: 'html' | 'text' | 'image'
+  mode?: 'html' | 'text' | 'image'
   closeOnFinish?: boolean
 }
 
@@ -102,7 +102,10 @@ export default class LLMScraper {
       const p = await page
       const content = this.preparePage(p)
       const completion = await openai.chat.completions.create({
-        model: options.model || options.mode === 'image' ? 'gpt-4-vision-preview' : 'gpt-4',
+        model:
+          options.model || options.mode === 'image'
+            ? 'gpt-4-vision-preview'
+            : 'gpt-4',
         messages: [{ role: 'user', content: [content] }],
         functions: [
           {
@@ -116,9 +119,12 @@ export default class LLMScraper {
         function_call: { name: 'extract_content' },
       })
 
-      if (pages.length - 1 === i && options.closeOnFinish) {
+      if (pages.length - 1 === i) {
         await this.context.close()
-        await this.browser.close()
+
+        if (options.closeOnFinish) {
+          await this.browser.close()
+        }
       }
 
       const c = completion.choices[0].message.function_call?.arguments
