@@ -5,7 +5,7 @@
   "description": "Turn any webpage intro structured data using LLMs",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
