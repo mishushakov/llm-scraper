@@ -1,5 +1,7 @@
 # LLM Scraper
 
+![Screen Recording 2024-04-20 at 21 58 00](https://github.com/mishushakov/llm-scraper/assets/10400064/19c775d4-f7ab-45cd-8f50-43a68f862ea1)
+
 LLM Scraper helps you to convert any webpages into structured data using LLMs.
 
 **Features**
