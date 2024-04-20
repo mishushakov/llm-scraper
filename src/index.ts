@@ -101,11 +101,12 @@ export default class LLMScraper {
     return pages.map(async (page, i) => {
       const p = await page
       const content = this.preparePage(p)
+
       const completion = await openai.chat.completions.create({
         model:
           options.model || options.mode === 'image'
             ? 'gpt-4-vision-preview'
-            : 'gpt-4',
+            : 'gpt-4-turbo',
         messages: [{ role: 'user', content: [content] }],
         functions: [
           {

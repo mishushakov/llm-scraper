@@ -10,16 +10,25 @@ const scraper = new LLMScraper(browser)
 
 // Define schema to extract contents into
 const schema = z.object({
-  title: z.string().describe('Title of the page'),
+  top: z
+    .array(
+      z.object({
+        title: z.string(),
+        points: z.number(),
+        by: z.string(),
+        commentsURL: z.string(),
+      })
+    )
+    .describe('Top stories on Hacker News'),
 })
 
 // URLs to scrape
-const urls = ['https://example.com', 'https://browserbase.com']
+const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {
   schema,
-  mode: 'text',
+  mode: 'html',
   closeOnFinish: true,
 })
 
