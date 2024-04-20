@@ -79,49 +79,52 @@ export default class LLMScraper {
   }
 
   // Prepare the pages for further processing
-  private preparePages(
-    pages: ScraperLoadResult[]
-  ): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
-    return pages.map((page) => {
-      if (page.mode === 'image') {
-        return {
-          type: 'image_url',
-          image_url: { url: `data:image/jpeg;base64,${page.content}` },
-        }
+  private preparePage(
+    page: ScraperLoadResult
+  ): OpenAI.Chat.Completions.ChatCompletionContentPart {
+    if (page.mode === 'image') {
+      return {
+        type: 'image_url',
+        image_url: { url: `data:image/jpeg;base64,${page.content}` },
       }
+    }
 
-      return { type: 'text', text: page.content }
-    })
+    return { type: 'text', text: page.content }
   }
 
   // Generate completion using OpenAI
-  private async generateCompletion(
+  private async generateCompletions(
     model: OpenAI.Chat.ChatModel = 'gpt-4-turbo',
     schema: z.ZodSchema<any>,
     pages: ScraperLoadResult[]
-  ): Promise<z.infer<typeof schema>> {
+  ) {
     const openai = new OpenAI()
-    const content = this.preparePages(pages)
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content }],
-      functions: [
-        {
-          name: 'extract_content',
-          description: 'Extracts the content from given pages',
-          parameters: zodToJsonSchema(schema),
-        },
-      ],
-      function_call: { name: 'extract_content' },
-    })
+    return pages.map(async (page) => {
+      const content = this.preparePage(page)
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [{ role: 'user', content: [content] }],
+        functions: [
+          {
+            name: 'extract_content',
+            description: 'Extracts the content from given pages',
+            parameters: zodToJsonSchema(schema),
+          },
+        ],
+        function_call: { name: 'extract_content' },
+      })
 
-    const c = completion.choices[0].message.function_call?.arguments
-    return JSON.parse(c ? c : 'null')
+      const c = completion.choices[0].message.function_call?.arguments
+      return JSON.parse(c ? c : 'null')
+    })
   }
 
   // Load pages and generate completion
-  async run(url: string | string[], options: ScraperRunOptions): Promise<z.infer<typeof options['schema']>> {
+  async run(
+    url: string | string[],
+    options: ScraperRunOptions
+  ): Promise<z.infer<(typeof options)['schema']>> {
     const pages = await this.load(url, options)
-    return await this.generateCompletion(options.model, options.schema, pages)
+    return this.generateCompletions(options.model, options.schema, pages)
   }
 }
