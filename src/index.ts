@@ -16,7 +16,7 @@ type ScraperLoadResult = {
 
 type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
-  model?: OpenAI.Chat.ChatModel
+  model?: string
   instructions?: string
 } & ScraperLoadOptions
 
@@ -103,21 +103,28 @@ export default class LLMScraper {
       const content = this.preparePage(p)
 
       const completion = await openai.chat.completions.create({
-        model:
-          options.model || options.mode === 'image'
-            ? 'gpt-4-vision-preview'
-            : 'gpt-4-turbo',
-        messages: [{ role: 'user', content: [content] }],
-        functions: [
+        model: options.model,
+        messages: [
           {
-            name: 'extract_content',
-            description:
-              'Extracts the content from the given page' ||
-              options.instructions,
-            parameters: zodToJsonSchema(options.schema),
+            role: 'system',
+            content:
+              'You are a satistified web scraper. Extract the contents of the webpage',
+          },
+          { role: 'user', content: [content] },
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'extract_content',
+              description:
+                'Extracts the content from the given webpage(s)' ||
+                options.instructions,
+              parameters: zodToJsonSchema(options.schema),
+            },
           },
         ],
-        function_call: { name: 'extract_content' },
+        tool_choice: 'auto',
       })
 
       if (pages.length - 1 === i) {
@@ -128,9 +135,9 @@ export default class LLMScraper {
         }
       }
 
-      const c = completion.choices[0].message.function_call?.arguments
+      const c = completion.choices[0].message.tool_calls[0].function.arguments
       return {
-        data: JSON.parse(c ? c : 'null'),
+        data: JSON.parse(c),
         url: p.url,
       }
     })
