@@ -1,5 +1,5 @@
-import z from 'zod'
 import { chromium } from 'playwright'
+import { z } from 'zod'
 import LLMScraper from './../src'
 
 // Create a new browser instance

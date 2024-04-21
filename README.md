@@ -41,10 +41,16 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
    ```js
    import { chromium } from 'playwright'
+   import { z } from 'zod'
    import LLMScraper from 'llm-scraper'
 
    const browser = await chromium.launch()
-   const scraper = new LLMScraper(browser)
+   const schema = z.object({ title: z.string().describe('Website Title') })
+
+   const scraper = new LLMScraper(browser, {
+     model: 'gpt-4-turbo',
+     schema,
+   })
    ```
 
 ## Example
@@ -52,8 +58,8 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 In this example, we're extracting top stories from HackerNews:
 
 ```ts
-import z from 'zod'
 import { chromium } from 'playwright'
+import { z } from 'zod'
 import LLMScraper from 'llm-scraper'
 
 // Create a new browser instance
@@ -76,9 +82,9 @@ const schema = z.object({
 
 // Initialize the LLMScraper instance
 const scraper = new LLMScraper(browser, {
-  model: 'gpt-3.5-turbo',
+  model: 'gpt-4-turbo',
   schema,
-  mode: 'markdown',
+  mode: 'html',
   closeOnFinish: true,
 })
 

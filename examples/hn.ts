@@ -1,5 +1,5 @@
-import z from 'zod'
 import { chromium } from 'playwright'
+import { z } from 'zod'
 import LLMScraper from './../src'
 
 // Create a new browser instance
@@ -22,9 +22,9 @@ const schema = z.object({
 
 // Initialize the LLMScraper instance
 const scraper = new LLMScraper(browser, {
-  model: 'gpt-3.5-turbo',
+  model: 'gpt-4-turbo',
   schema,
-  mode: 'markdown',
+  mode: 'html',
   closeOnFinish: true,
 })
 
