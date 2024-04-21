@@ -1,13 +1,13 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import LLMScraper from './../src'
 
 // Launch a browser instance
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = openai.chat('gpt-3.5-turbo')
+const llm = anthropic.chat('claude-3-haiku-20240307')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(browser, llm)
@@ -32,7 +32,6 @@ const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {
-  model: 'gpt-4-turbo',
   schema,
   mode: 'html',
   closeOnFinish: true,
@@ -40,5 +39,5 @@ const pages = await scraper.run(urls, {
 
 // Stream the result from LLM
 for await (const page of pages) {
-  console.log(page.data)
+  console.log(page.data?.top)
 }

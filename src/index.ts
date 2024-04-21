@@ -1,13 +1,12 @@
 import { Browser, BrowserContext } from 'playwright'
 import Turndown from 'turndown'
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { OpenAI } from '@ai-sdk/openai'
 import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
 import {
   ScraperCompletionResult,
   generateLlamaCompletions,
-  generateOpenAICompletions,
+  generateAISDKCompletions,
 } from './models.js'
 
 export type ScraperLoadOptions = {
@@ -91,15 +90,15 @@ export default class LLMScraper {
     return pages
   }
 
-  // Generate completion using OpenAI
+  // Generate completion using AISDK
   private generateCompletions<T extends z.ZodSchema<any>>(
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
     const loader = pages.map(async (page, i) => {
       switch (this.client.constructor) {
-        case OpenAI:
-          return generateOpenAICompletions<T>(
+        default:
+          return generateAISDKCompletions<T>(
             this.client as LanguageModelV1,
             await page,
             options.schema,
@@ -114,8 +113,6 @@ export default class LLMScraper {
             options?.prompt,
             options?.temperature
           )
-        default:
-          throw new Error('Invalid client')
       }
     })
 

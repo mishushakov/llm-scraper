@@ -19,9 +19,13 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 const defaultPrompt =
   'You are a satistified web scraper. Extract the contents of the webpage'
 
-function prepareOpenAIPage(page: ScraperLoadResult): UserContent {
+function prepareAISDKPage(
+  prompt: string,
+  page: ScraperLoadResult
+): UserContent {
   if (page.mode === 'image') {
     return [
+      { type: 'text', text: prompt },
       {
         type: 'image',
         image: page.content,
@@ -29,32 +33,29 @@ function prepareOpenAIPage(page: ScraperLoadResult): UserContent {
     ]
   }
 
-  return [{ type: 'text', text: page.content }]
+  return [
+    { type: 'text', text: prompt },
+    { type: 'text', text: page.content },
+  ]
 }
 
-export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
+export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
   schema: T,
   prompt: string = defaultPrompt,
   temperature?: number
-): Promise<ScraperCompletionResult<T>> {
-  const content = prepareOpenAIPage(page)
-  const data = await experimental_generateObject({
+) {
+  const content = prepareAISDKPage(prompt, page)
+  const result = await experimental_generateObject({
     model,
     schema,
-    messages: [
-      {
-        role: 'assistant',
-        content: prompt,
-      },
-      { role: 'user', content },
-    ],
+    messages: [{ role: 'user', content }],
     temperature,
   })
 
   return {
-    data,
+    data: result.object,
     url: page.url,
   }
 }
@@ -66,8 +67,8 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const generatedSchema = zodToJsonSchema(schema)
-  const grammar = new LlamaJsonSchemaGrammar(generatedSchema as GbnfJsonSchema) as any // any, because it has type inference going wild
+  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
+  const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
   const pagePrompt = `${prompt}\n${page.content}`
