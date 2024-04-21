@@ -1,10 +1,11 @@
 import { Browser, BrowserContext } from 'playwright'
+import Turndown from 'turndown'
 import OpenAI from 'openai'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 type ScraperLoadOptions = {
-  mode?: 'html' | 'text' | 'image'
+  mode?: 'html' | 'text' | 'markdown' | 'image'
   closeOnFinish?: boolean
 }
 
@@ -47,6 +48,10 @@ export default class LLMScraper {
 
       if (options.mode === 'html') {
         content = await page.content()
+      }
+
+      if (options.mode === 'markdown') {
+        content = new Turndown().turndown(await page.content())
       }
 
       if (options.mode === 'text') {

@@ -27,6 +27,7 @@
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
     "openai": "^4.38.2",
+    "turndown": "^7.1.3",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {

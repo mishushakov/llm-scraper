@@ -19,6 +19,7 @@ const schema = z.object({
         commentsURL: z.string(),
       })
     )
+    .length(5)
     .describe('Top 5 stories on Hacker News'),
 })
 
@@ -27,9 +28,9 @@ const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {
-  model: 'gpt-4-turbo',
+  model: 'gpt-3.5-turbo',
   schema,
-  mode: 'html',
+  mode: 'markdown',
   closeOnFinish: true,
 })
 
