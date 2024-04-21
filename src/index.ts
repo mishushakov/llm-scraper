@@ -59,7 +59,7 @@ export default class LLMScraper {
           return new readability.Readability(document).parse()
         })
 
-        content = `${readable.title}\n${readable.textContent}`
+        content = `Page Title: ${readable.title}\n${readable.textContent}`
       }
 
       if (options.mode === 'image') {
