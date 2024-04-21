@@ -14,7 +14,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 - Full type-safety with TypeScript
 - Based on Playwright framework
 - Streaming when crawling multiple pages
-- Supports 3 input modes:
+- Supports 4 input modes:
   - `html` for loading raw HTML
   - `markdown` for loading markdown
   - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
@@ -42,16 +42,10 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
    ```js
    import { chromium } from 'playwright'
-   import { z } from 'zod'
    import LLMScraper from 'llm-scraper'
 
    const browser = await chromium.launch()
-   const schema = z.object({ title: z.string().describe('Website Title') })
-
-   const scraper = new LLMScraper(browser, {
-     model: 'gpt-4-turbo',
-     schema,
-   })
+   const scraper = new LLMScraper(browser, 'gpt-4-turbo', { /* model config */ })
    ```
 
 ## Example
@@ -65,6 +59,9 @@ import LLMScraper from 'llm-scraper'
 
 // Create a new browser instance
 const browser = await chromium.launch()
+
+// Initialize the LLMScraper instance
+const scraper = new LLMScraper(browser, 'gpt-4-turbo')
 
 // Define schema to extract contents into
 const schema = z.object({
@@ -81,19 +78,15 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// Initialize the LLMScraper instance
-const scraper = new LLMScraper(browser, {
-  model: 'gpt-4-turbo',
-  schema,
-  mode: 'html',
-  closeOnFinish: true,
-})
-
 // URLs to scrape
 const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
-const pages = await scraper.run(urls)
+const pages = await scraper.run(urls, {
+  schema,
+  mode: 'html',
+  closeOnFinish: true,
+})
 
 // Stream the result from LLM
 for await (const page of pages) {

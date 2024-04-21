@@ -4,6 +4,12 @@ import OpenAI from 'openai'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
+type ScraperConfig = {
+  baseURL?: string
+  prompt?: string
+  temperature?: number
+}
+
 type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
   closeOnFinish?: boolean
@@ -17,10 +23,6 @@ type ScraperLoadResult = {
 
 type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
-  model: string
-  temperature?: number
-  baseURL?: string
-  instructions?: string
 } & ScraperLoadOptions
 
 type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
@@ -28,14 +30,16 @@ type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   url: string
 }
 
-export default class LLMScraper<T extends z.ZodSchema<any>> {
+export default class LLMScraper {
   private browser: Browser
   private context: BrowserContext
-  private options: ScraperRunOptions<T>
+  private model: string
+  private config: ScraperConfig
 
-  constructor(browser: Browser, options: ScraperRunOptions<T>) {
+  constructor(browser: Browser, model: string, config?: ScraperConfig) {
     this.browser = browser
-    this.options = options
+    this.model = model
+    this.config = config
   }
 
   // Load pages in the browser
@@ -107,22 +111,23 @@ export default class LLMScraper<T extends z.ZodSchema<any>> {
   }
 
   // Generate completion using OpenAI
-  private generateCompletions(
+  private generateCompletions<T extends z.ZodSchema<any>>(
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
-    const openai = new OpenAI({ baseURL: options.baseURL })
+    const openai = new OpenAI({ baseURL: this.config.baseURL })
     return pages.map(async (page, i) => {
       const p = await page
       const content = this.preparePage(p)
       const parameters = zodToJsonSchema(options.schema)
 
       const completion = await openai.chat.completions.create({
-        model: options.model,
+        model: this.model,
         messages: [
           {
             role: 'system',
             content:
+              this.config.prompt ||
               'You are a satistified web scraper. Extract the contents of the webpage',
           },
           { role: 'user', content },
@@ -132,15 +137,13 @@ export default class LLMScraper<T extends z.ZodSchema<any>> {
             type: 'function',
             function: {
               name: 'extract_content',
-              description:
-                'Extracts the content from the given webpage(s)' ||
-                options.instructions,
+              description: 'Extracts the content from the given webpage(s)',
               parameters,
             },
           },
         ],
         tool_choice: 'auto',
-        temperature: options.temperature,
+        temperature: this.config.temperature,
       })
 
       if (pages.length - 1 === i && options.closeOnFinish) {
@@ -157,9 +160,12 @@ export default class LLMScraper<T extends z.ZodSchema<any>> {
   }
 
   // Load pages and generate completion
-  async run(url: string | string[]) {
-    const pages = await this.load(url, this.options)
-    return this.generateCompletions(pages, this.options)
+  async run<T extends z.ZodSchema<any>>(
+    url: string | string[],
+    options: ScraperRunOptions<T>
+  ) {
+    const pages = await this.load(url, options)
+    return this.generateCompletions<T>(pages, options)
   }
 
   // Close the current context and the browser

@@ -5,17 +5,12 @@ import LLMScraper from './../src'
 // Create a new browser instance
 const browser = await chromium.launch()
 
+// Initialize the LLMScraper instance
+const scraper = new LLMScraper(browser, 'gpt-4-turbo')
+
 // Define schema to extract contents into
 const schema = z.object({
   title: z.string().describe('Title of the webpage'),
-})
-
-// Initialize the LLMScraper instance
-const scraper = new LLMScraper(browser, {
-  model: 'gpt-4-turbo',
-  schema,
-  mode: 'text',
-  closeOnFinish: true,
 })
 
 // URLs to scrape
@@ -27,7 +22,11 @@ const urls = [
 ]
 
 // Run the scraper
-const pages = await scraper.run(urls)
+const pages = await scraper.run(urls, {
+  schema,
+  mode: 'html',
+  closeOnFinish: true,
+})
 
 // Stream the result from LLM
 for await (const page of pages) {
