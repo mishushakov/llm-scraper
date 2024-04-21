@@ -10,7 +10,6 @@ import {
 } from './models.js'
 
 type ScraperConfig = {
-  baseURL?: string
   prompt?: string
   temperature?: number
 }
@@ -28,6 +27,7 @@ export type ScraperLoadResult = {
 
 export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
+  model?: string
 } & ScraperLoadOptions
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
@@ -36,23 +36,16 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 }
 
 export default class LLMScraper {
-  private browser: Browser
   private context: BrowserContext
-  private model: string | LlamaModel
-  private config: ScraperConfig
-  private client: OpenAI | LlamaModel
 
   constructor(
-    browser: Browser,
-    model: string | LlamaModel,
-    config?: ScraperConfig
+    private browser: Browser,
+    private client: OpenAI | LlamaModel,
+    private config?: ScraperConfig
   ) {
     this.browser = browser
     this.config = config
-    this.client =
-      typeof model === 'string'
-        ? new OpenAI({ baseURL: config.baseURL })
-        : model
+    this.client = client
   }
 
   // Load pages in the browser
@@ -118,8 +111,8 @@ export default class LLMScraper {
         case OpenAI:
           return generateOpenAICompletions<T>(
             this.client as OpenAI,
-            this.model as string,
-            page,
+            options.model,
+            await page,
             schema,
             this.config?.prompt,
             this.config?.temperature
@@ -127,7 +120,7 @@ export default class LLMScraper {
         case LlamaModel:
           return generateLlamaCompletions<T>(
             this.client,
-            page,
+            await page,
             schema,
             this.config?.prompt,
             this.config?.temperature

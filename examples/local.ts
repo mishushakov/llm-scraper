@@ -18,7 +18,7 @@ const schema = z.object({
 })
 
 // URLs to scrape
-const urls = ['https://example.com']
+const urls = ['https://example.com', 'https://browserbase.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {

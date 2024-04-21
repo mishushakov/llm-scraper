@@ -29,15 +29,14 @@ function prepareOpenAIPage(
 
 export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
   client: OpenAI,
-  model: string,
-  page: Promise<ScraperLoadResult>,
+  model: string = 'gpt-3.5-turbo',
+  page: ScraperLoadResult,
   schema: JsonSchema7Type,
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
   const openai = client as OpenAI
-  const p = await page
-  const content = prepareOpenAIPage(p)
+  const content = prepareOpenAIPage(page)
 
   const completion = await openai.chat.completions.create({
     model,
@@ -65,22 +64,21 @@ export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
   const c = completion.choices[0].message.tool_calls[0].function.arguments
   return {
     data: JSON.parse(c),
-    url: p.url,
+    url: page.url,
   }
 }
 
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   model: LlamaModel,
-  page: Promise<ScraperLoadResult>,
+  page: ScraperLoadResult,
   schema: JsonSchema7Type,
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const p = await page
   const grammar = new LlamaJsonSchemaGrammar(schema as any)
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
-  const pagePrompt = `${prompt}\n${p.content}`
+  const pagePrompt = `${prompt}\n${page.content}`
 
   const result = await session.prompt(pagePrompt, {
     grammar,
@@ -90,6 +88,6 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   const parsed = grammar.parse(result)
   return {
     data: parsed,
-    url: p.url,
+    url: page.url,
   }
 }
