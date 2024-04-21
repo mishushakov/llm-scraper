@@ -1,4 +1,5 @@
-import OpenAI from 'openai'
+import { LanguageModelV1 } from '@ai-sdk/provider'
+import { experimental_generateObject, UserContent } from 'ai'
 import { z } from 'zod'
 import { ScraperLoadResult } from './index.js'
 import {
@@ -18,14 +19,12 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 const defaultPrompt =
   'You are a satistified web scraper. Extract the contents of the webpage'
 
-function prepareOpenAIPage(
-  page: ScraperLoadResult
-): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
+function prepareOpenAIPage(page: ScraperLoadResult): UserContent {
   if (page.mode === 'image') {
     return [
       {
-        type: 'image_url',
-        image_url: { url: `data:image/jpeg;base64,${page.content}` },
+        type: 'image',
+        image: page.content,
       },
     ]
   }
@@ -34,42 +33,28 @@ function prepareOpenAIPage(
 }
 
 export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
-  client: OpenAI,
-  model: string = 'gpt-3.5-turbo',
+  model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: JsonSchema7Type,
+  schema: T,
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const openai = client as OpenAI
   const content = prepareOpenAIPage(page)
-
-  const completion = await openai.chat.completions.create({
+  const data = await experimental_generateObject({
     model,
+    schema,
     messages: [
       {
-        role: 'system',
+        role: 'assistant',
         content: prompt,
       },
       { role: 'user', content },
     ],
-    tools: [
-      {
-        type: 'function',
-        function: {
-          name: 'extract_content',
-          description: 'Extracts the content from the given webpage(s)',
-          parameters: schema,
-        },
-      },
-    ],
-    tool_choice: 'auto',
     temperature,
   })
 
-  const c = completion.choices[0].message.tool_calls[0].function.arguments
   return {
-    data: JSON.parse(c),
+    data,
     url: page.url,
   }
 }

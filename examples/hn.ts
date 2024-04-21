@@ -1,13 +1,13 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import OpenAI from 'openai'
+import { openai } from '@ai-sdk/openai';
 import LLMScraper from './../src'
 
 // Launch a browser instance
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = new OpenAI()
+const llm = openai.chat('gpt-3.5-turbo')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(browser, llm)
