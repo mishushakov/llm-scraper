@@ -18,6 +18,8 @@ type ScraperLoadResult = {
 type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
   model?: string
+  temperature?: number
+  baseURL?: string
   instructions?: string
 } & ScraperLoadOptions
 
@@ -86,15 +88,15 @@ export default class LLMScraper {
   // Prepare the pages for further processing
   private preparePage(
     page: ScraperLoadResult
-  ): OpenAI.Chat.Completions.ChatCompletionContentPart {
+  ): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
     if (page.mode === 'image') {
-      return {
+      return [{
         type: 'image_url',
         image_url: { url: `data:image/jpeg;base64,${page.content}` },
-      }
+      }]
     }
 
-    return { type: 'text', text: page.content }
+    return [{ type: 'text', text: page.content }]
   }
 
   // Generate completion using OpenAI
@@ -102,10 +104,11 @@ export default class LLMScraper {
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
-    const openai = new OpenAI()
+    const openai = new OpenAI({ baseURL: options.baseURL })
     return pages.map(async (page, i) => {
       const p = await page
       const content = this.preparePage(p)
+      const parameters = zodToJsonSchema(options.schema)
 
       const completion = await openai.chat.completions.create({
         model: options.model,
@@ -115,7 +118,7 @@ export default class LLMScraper {
             content:
               'You are a satistified web scraper. Extract the contents of the webpage',
           },
-          { role: 'user', content: [content] },
+          { role: 'user', content },
         ],
         tools: [
           {
@@ -125,11 +128,12 @@ export default class LLMScraper {
               description:
                 'Extracts the content from the given webpage(s)' ||
                 options.instructions,
-              parameters: zodToJsonSchema(options.schema),
+              parameters,
             },
           },
         ],
         tool_choice: 'auto',
+        temperature: options.temperature,
       })
 
       if (pages.length - 1 === i) {
