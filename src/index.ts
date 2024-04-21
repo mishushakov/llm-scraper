@@ -4,7 +4,6 @@ import { LanguageModelV1 } from '@ai-sdk/provider'
 import { OpenAI } from '@ai-sdk/openai'
 import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 import {
   ScraperCompletionResult,
   generateLlamaCompletions,
@@ -97,7 +96,6 @@ export default class LLMScraper {
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
-    const schema = zodToJsonSchema(options.schema)
     const loader = pages.map(async (page, i) => {
       switch (this.client.constructor) {
         case OpenAI:
@@ -112,7 +110,7 @@ export default class LLMScraper {
           return generateLlamaCompletions<T>(
             this.client,
             await page,
-            schema,
+            options.schema,
             options?.prompt,
             options?.temperature
           )

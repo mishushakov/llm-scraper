@@ -9,7 +9,7 @@ import {
   LlamaChatSession,
   GbnfJsonSchema,
 } from 'node-llama-cpp'
-import { JsonSchema7Type } from 'zod-to-json-schema'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   data: z.infer<T> | null
@@ -62,11 +62,12 @@ export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   model: LlamaModel,
   page: ScraperLoadResult,
-  schema: JsonSchema7Type,
+  schema: T,
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const grammar = new LlamaJsonSchemaGrammar(schema as GbnfJsonSchema) as any // any, because it has weird type inference going on
+  const generatedSchema = zodToJsonSchema(schema)
+  const grammar = new LlamaJsonSchemaGrammar(generatedSchema as GbnfJsonSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
   const pagePrompt = `${prompt}\n${page.content}`
