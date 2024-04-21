@@ -17,7 +17,7 @@ type ScraperLoadResult = {
 
 type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
-  model?: string
+  model: string
   temperature?: number
   baseURL?: string
   instructions?: string
@@ -53,7 +53,7 @@ export default class LLMScraper {
       }
 
       if (options.mode === 'markdown') {
-        content = new Turndown().turndown(await page.content())
+        content = new Turndown().remove('head').turndown(await page.content())
       }
 
       if (options.mode === 'text') {
