@@ -9,13 +9,14 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
 ### Features
 
-- Uses OpenAI chat models
+- Supports OpenAI, Groq chat models
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
 - Streaming when crawling multiple pages
 - Supports 3 input modes:
   - `html` for loading raw HTML
+  - `markdown` for loading markdown
   - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
   - `image` for loading a screenshot (multi-modal only)
 

@@ -57,7 +57,8 @@ export default class LLMScraper<T extends z.ZodSchema<any>> {
       }
 
       if (options.mode === 'markdown') {
-        content = new Turndown().remove('head').turndown(await page.content())
+        const body = await page.innerHTML('body')
+        content = new Turndown().turndown(body)
       }
 
       if (options.mode === 'text') {
