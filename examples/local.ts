@@ -26,7 +26,6 @@ const urls = ['https://example.com', 'https://browserbase.com']
 const pages = await scraper.run(urls, {
   schema,
   mode: 'text',
-  closeOnFinish: true,
 })
 
 // Stream the result from LLM

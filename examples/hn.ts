@@ -32,7 +32,6 @@ const pages = await scraper.run(urls, {
   model: 'gpt-4-turbo',
   schema,
   mode: 'html',
-  closeOnFinish: true,
 })
 
 // Stream the result from LLM

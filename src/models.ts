@@ -1,13 +1,19 @@
 import OpenAI from 'openai'
 import { z } from 'zod'
-import { ScraperLoadResult, ScraperCompletionResult } from './index.js'
+import { ScraperLoadResult } from './index.js'
 import {
   LlamaModel,
   LlamaJsonSchemaGrammar,
   LlamaContext,
   LlamaChatSession,
+  GbnfJsonSchema,
 } from 'node-llama-cpp'
 import { JsonSchema7Type } from 'zod-to-json-schema'
+
+export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
+  data: z.infer<T> | null
+  url: string
+}
 
 const defaultPrompt =
   'You are a satistified web scraper. Extract the contents of the webpage'
@@ -75,7 +81,7 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const grammar = new LlamaJsonSchemaGrammar(schema as any)
+  const grammar = new LlamaJsonSchemaGrammar(schema as GbnfJsonSchema) as any // any, because it has weird type inference going on
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
   const pagePrompt = `${prompt}\n${page.content}`

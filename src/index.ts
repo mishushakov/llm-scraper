@@ -5,13 +5,14 @@ import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import {
+  ScraperCompletionResult,
   generateLlamaCompletions,
   generateOpenAICompletions,
 } from './models.js'
 
 export type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
-  closeOnFinish?: boolean
+  // closeOnFinish?: boolean
 }
 
 export type ScraperLoadResult = {
@@ -26,11 +27,6 @@ export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   prompt?: string
   temperature?: number
 } & ScraperLoadOptions
-
-export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
-  data: z.infer<T> | null
-  url: string
-}
 
 export default class LLMScraper {
   private context: BrowserContext
