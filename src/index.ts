@@ -90,10 +90,12 @@ export default class LLMScraper {
     page: ScraperLoadResult
   ): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
     if (page.mode === 'image') {
-      return [{
-        type: 'image_url',
-        image_url: { url: `data:image/jpeg;base64,${page.content}` },
-      }]
+      return [
+        {
+          type: 'image_url',
+          image_url: { url: `data:image/jpeg;base64,${page.content}` },
+        },
+      ]
     }
 
     return [{ type: 'text', text: page.content }]
@@ -136,12 +138,9 @@ export default class LLMScraper {
         temperature: options.temperature,
       })
 
-      if (pages.length - 1 === i) {
+      if (pages.length - 1 === i && options.closeOnFinish) {
         await this.context.close()
-
-        if (options.closeOnFinish) {
-          await this.browser.close()
-        }
+        await this.browser.close()
       }
 
       const c = completion.choices[0].message.tool_calls[0].function.arguments
@@ -159,5 +158,11 @@ export default class LLMScraper {
   ) {
     const pages = await this.load(url, options)
     return this.generateCompletions<T>(pages, options)
+  }
+
+  // Close the current context and the browser
+  async close() {
+    await this.context.close()
+    await this.browser.close()
   }
 }
