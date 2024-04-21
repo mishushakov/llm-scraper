@@ -1,8 +1,13 @@
 import { Browser, BrowserContext } from 'playwright'
 import Turndown from 'turndown'
 import OpenAI from 'openai'
+import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
+import {
+  generateLlamaCompletions,
+  generateOpenAICompletions,
+} from './models.js'
 
 type ScraperConfig = {
   baseURL?: string
@@ -10,22 +15,22 @@ type ScraperConfig = {
   temperature?: number
 }
 
-type ScraperLoadOptions = {
+export type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
   closeOnFinish?: boolean
 }
 
-type ScraperLoadResult = {
+export type ScraperLoadResult = {
   url: string
   content: string
   mode: ScraperLoadOptions['mode']
 }
 
-type ScraperRunOptions<T extends z.ZodSchema<any>> = {
+export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
 } & ScraperLoadOptions
 
-type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
+export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   data: z.infer<T> | null
   url: string
 }
@@ -33,13 +38,21 @@ type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 export default class LLMScraper {
   private browser: Browser
   private context: BrowserContext
-  private model: string
+  private model: string | LlamaModel
   private config: ScraperConfig
+  private client: OpenAI | LlamaModel
 
-  constructor(browser: Browser, model: string, config?: ScraperConfig) {
+  constructor(
+    browser: Browser,
+    model: string | LlamaModel,
+    config?: ScraperConfig
+  ) {
     this.browser = browser
-    this.model = model
     this.config = config
+    this.client =
+      typeof model === 'string'
+        ? new OpenAI({ baseURL: config.baseURL })
+        : model
   }
 
   // Load pages in the browser
@@ -94,67 +107,33 @@ export default class LLMScraper {
     return pages
   }
 
-  // Prepare the pages for further processing
-  private preparePage(
-    page: ScraperLoadResult
-  ): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
-    if (page.mode === 'image') {
-      return [
-        {
-          type: 'image_url',
-          image_url: { url: `data:image/jpeg;base64,${page.content}` },
-        },
-      ]
-    }
-
-    return [{ type: 'text', text: page.content }]
-  }
-
   // Generate completion using OpenAI
   private generateCompletions<T extends z.ZodSchema<any>>(
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
-    const openai = new OpenAI({ baseURL: this.config.baseURL })
+    const schema = zodToJsonSchema(options.schema)
     return pages.map(async (page, i) => {
-      const p = await page
-      const content = this.preparePage(p)
-      const parameters = zodToJsonSchema(options.schema)
-
-      const completion = await openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              this.config.prompt ||
-              'You are a satistified web scraper. Extract the contents of the webpage',
-          },
-          { role: 'user', content },
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'extract_content',
-              description: 'Extracts the content from the given webpage(s)',
-              parameters,
-            },
-          },
-        ],
-        tool_choice: 'auto',
-        temperature: this.config.temperature,
-      })
-
-      if (pages.length - 1 === i && options.closeOnFinish) {
-        await this.context.close()
-        await this.browser.close()
-      }
-
-      const c = completion.choices[0].message.tool_calls[0].function.arguments
-      return {
-        data: JSON.parse(c),
-        url: p.url,
+      switch (this.client.constructor) {
+        case OpenAI:
+          return generateOpenAICompletions<T>(
+            this.client as OpenAI,
+            this.model as string,
+            page,
+            schema,
+            this.config?.prompt,
+            this.config?.temperature
+          )
+        case LlamaModel:
+          return generateLlamaCompletions<T>(
+            this.client,
+            page,
+            schema,
+            this.config?.prompt,
+            this.config?.temperature
+          )
+        default:
+          throw new Error('Invalid client')
       }
     })
   }
