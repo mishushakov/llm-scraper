@@ -28,10 +28,14 @@ type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   url: string
 }
 
-export default class LLMScraper {
+export default class LLMScraper<T extends z.ZodSchema<any>> {
+  private browser: Browser
   private context: BrowserContext
-  constructor(private browser: Browser) {
+  private options: ScraperRunOptions<T>
+
+  constructor(browser: Browser, options: ScraperRunOptions<T>) {
     this.browser = browser
+    this.options = options
   }
 
   // Load pages in the browser
@@ -102,7 +106,7 @@ export default class LLMScraper {
   }
 
   // Generate completion using OpenAI
-  private generateCompletions<T extends z.ZodSchema<any>>(
+  private generateCompletions(
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
@@ -152,12 +156,9 @@ export default class LLMScraper {
   }
 
   // Load pages and generate completion
-  async run<T extends z.ZodSchema<any>>(
-    url: string | string[],
-    options: ScraperRunOptions<T>
-  ) {
-    const pages = await this.load(url, options)
-    return this.generateCompletions<T>(pages, options)
+  async run(url: string | string[]) {
+    const pages = await this.load(url, this.options)
+    return this.generateCompletions(pages, this.options)
   }
 
   // Close the current context and the browser

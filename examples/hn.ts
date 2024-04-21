@@ -5,9 +5,6 @@ import LLMScraper from './../src'
 // Create a new browser instance
 const browser = await chromium.launch()
 
-// Initialize the LLMScraper instance
-const scraper = new LLMScraper(browser)
-
 // Define schema to extract contents into
 const schema = z.object({
   top: z
@@ -23,16 +20,19 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// URLs to scrape
-const urls = ['https://news.ycombinator.com']
-
-// Run the scraper
-const pages = await scraper.run(urls, {
+// Initialize the LLMScraper instance
+const scraper = new LLMScraper(browser, {
   model: 'gpt-3.5-turbo',
   schema,
   mode: 'markdown',
   closeOnFinish: true,
 })
+
+// URLs to scrape
+const urls = ['https://news.ycombinator.com']
+
+// Run the scraper
+const pages = await scraper.run(urls)
 
 // Stream the result from LLM
 for await (const page of pages) {

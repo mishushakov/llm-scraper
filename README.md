@@ -27,25 +27,25 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
 1. Install the required dependencies from npm:
 
-    ```
-    npm i zod playwright llm-scraper
-    ```
+   ```
+   npm i zod playwright llm-scraper
+   ```
 
 2. Get an OpenAI API key and set it in your environment variables:
 
-    ```
-    export OPENAI_API_KEY=***
-    ```
+   ```
+   export OPENAI_API_KEY=***
+   ```
 
 3. Create a new browser instance and attach LLMScraper to it:
 
-    ```js
-    import { chromium } from 'playwright'
-    import LLMScraper from 'llm-scraper'
+   ```js
+   import { chromium } from 'playwright'
+   import LLMScraper from 'llm-scraper'
 
-    const browser = await chromium.launch()
-    const scraper = new LLMScraper(browser)
-    ```
+   const browser = await chromium.launch()
+   const scraper = new LLMScraper(browser)
+   ```
 
 ## Example
 
@@ -59,9 +59,6 @@ import LLMScraper from 'llm-scraper'
 // Create a new browser instance
 const browser = await chromium.launch()
 
-// Initialize the LLMScraper instance
-const scraper = new LLMScraper(browser)
-
 // Define schema to extract contents into
 const schema = z.object({
   top: z
@@ -73,19 +70,23 @@ const schema = z.object({
         commentsURL: z.string(),
       })
     )
-    .describe('Top stories on Hacker News'),
+    .length(5)
+    .describe('Top 5 stories on Hacker News'),
+})
+
+// Initialize the LLMScraper instance
+const scraper = new LLMScraper(browser, {
+  model: 'gpt-3.5-turbo',
+  schema,
+  mode: 'markdown',
+  closeOnFinish: true,
 })
 
 // URLs to scrape
 const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
-const pages = await scraper.run(urls, {
-  model: 'gpt-4-turbo',
-  schema,
-  mode: 'html',
-  closeOnFinish: true,
-})
+const pages = await scraper.run(urls)
 
 // Stream the result from LLM
 for await (const page of pages) {
