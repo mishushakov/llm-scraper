@@ -119,7 +119,7 @@ export default class LLMScraper {
     })
 
     Promise.all(loader).then(() => {
-      if (options.closeOnFinish === undefined || options.closeOnFinish) {
+      if (options.closeOnFinish) {
         this.close()
       }
     })

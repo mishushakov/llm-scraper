@@ -3,16 +3,16 @@ import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
 import LLMScraper from './../src'
 
-// Create a new browser instance
+// Launch a browser instance
 const browser = await chromium.launch()
 
 const modelPath =
   '/Users/mish/jan/models/tinyllama-1.1b/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf'
 
-const model = new LlamaModel({ modelPath })
+const llm = new LlamaModel({ modelPath })
 
-// Initialize the LLMScraper instance with local model
-const scraper = new LLMScraper(browser, model)
+// Initialize a new LLMScraper with local model
+const scraper = new LLMScraper(browser, llm)
 
 // Define schema to extract contents into
 const schema = z.object({
@@ -26,6 +26,7 @@ const urls = ['https://example.com', 'https://browserbase.com']
 const pages = await scraper.run(urls, {
   schema,
   mode: 'text',
+  closeOnFinish: true,
 })
 
 // Stream the result from LLM
