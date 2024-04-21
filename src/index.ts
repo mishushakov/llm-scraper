@@ -12,7 +12,7 @@ import {
 
 export type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
-  // closeOnFinish?: boolean
+  closeOnFinish?: boolean
 }
 
 export type ScraperLoadResult = {
@@ -31,10 +31,7 @@ export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
 export default class LLMScraper {
   private context: BrowserContext
 
-  constructor(
-    private browser: Browser,
-    private client: OpenAI | LlamaModel,
-  ) {
+  constructor(private browser: Browser, private client: OpenAI | LlamaModel) {
     this.browser = browser
     this.client = client
   }
@@ -97,7 +94,7 @@ export default class LLMScraper {
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
     const schema = zodToJsonSchema(options.schema)
-    return pages.map(async (page, i) => {
+    const loader = pages.map(async (page, i) => {
       switch (this.client.constructor) {
         case OpenAI:
           return generateOpenAICompletions<T>(
@@ -120,6 +117,14 @@ export default class LLMScraper {
           throw new Error('Invalid client')
       }
     })
+
+    Promise.all(loader).then(() => {
+      if (options.closeOnFinish === undefined || options.closeOnFinish) {
+        this.close()
+      }
+    })
+
+    return loader
   }
 
   // Load pages and generate completion
