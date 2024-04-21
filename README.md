@@ -9,7 +9,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
 ### Features
 
-- Supports OpenAI, Groq chat models
+- Supports **Local (GGUF)**, OpenAI, Groq chat models
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
@@ -32,10 +32,20 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
    npm i zod playwright llm-scraper
    ```
 
-2. Get an OpenAI API key and set it in your environment variables:
+2. Initialize your LLM:
 
+   **OpenAI**
+
+   ```js
+   import OpenAI from 'openai'
+   const model = new OpenAI()
    ```
-   export OPENAI_API_KEY=***
+
+   **Local**
+
+   ```js
+   import { LlamaModel } from 'node-llama-cpp'
+   const model = new LlamaModel({ modelPath: 'model.gguf' })
    ```
 
 3. Create a new browser instance and attach LLMScraper to it:
@@ -45,7 +55,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
    import LLMScraper from 'llm-scraper'
 
    const browser = await chromium.launch()
-   const scraper = new LLMScraper(browser, 'gpt-4-turbo', { /* model config */ })
+   const scraper = new LLMScraper(browser, model)
    ```
 
 ## Example
@@ -55,13 +65,14 @@ In this example, we're extracting top stories from HackerNews:
 ```ts
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import LLMScraper from 'llm-scraper'
+import OpenAI from 'openai'
+import LLMScraper from './../src'
 
 // Create a new browser instance
 const browser = await chromium.launch()
 
 // Initialize the LLMScraper instance
-const scraper = new LLMScraper(browser, 'gpt-4-turbo')
+const scraper = new LLMScraper(browser, new OpenAI())
 
 // Define schema to extract contents into
 const schema = z.object({
@@ -83,9 +94,9 @@ const urls = ['https://news.ycombinator.com']
 
 // Run the scraper
 const pages = await scraper.run(urls, {
+  model: 'gpt-4-turbo',
   schema,
   mode: 'html',
-  closeOnFinish: true,
 })
 
 // Stream the result from LLM

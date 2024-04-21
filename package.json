@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "llm-scraper",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Turn any webpage intro structured data using LLMs",
   "main": "dist/index.js",
   "scripts": {
