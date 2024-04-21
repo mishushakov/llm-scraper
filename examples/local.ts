@@ -9,8 +9,10 @@ const browser = await chromium.launch()
 const modelPath =
   '/Users/mish/jan/models/tinyllama-1.1b/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf'
 
-// Initialize the LLMScraper instance with LlamaModel
-const scraper = new LLMScraper(browser, new LlamaModel({ modelPath }))
+const model = new LlamaModel({ modelPath })
+
+// Initialize the LLMScraper instance with local model
+const scraper = new LLMScraper(browser, model)
 
 // Define schema to extract contents into
 const schema = z.object({

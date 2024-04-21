@@ -9,11 +9,6 @@ import {
   generateOpenAICompletions,
 } from './models.js'
 
-type ScraperConfig = {
-  prompt?: string
-  temperature?: number
-}
-
 export type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
   closeOnFinish?: boolean
@@ -28,6 +23,8 @@ export type ScraperLoadResult = {
 export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
   model?: string
+  prompt?: string
+  temperature?: number
 } & ScraperLoadOptions
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
@@ -41,10 +38,8 @@ export default class LLMScraper {
   constructor(
     private browser: Browser,
     private client: OpenAI | LlamaModel,
-    private config?: ScraperConfig
   ) {
     this.browser = browser
-    this.config = config
     this.client = client
   }
 
@@ -114,16 +109,16 @@ export default class LLMScraper {
             options.model,
             await page,
             schema,
-            this.config?.prompt,
-            this.config?.temperature
+            options?.prompt,
+            options?.temperature
           )
         case LlamaModel:
           return generateLlamaCompletions<T>(
             this.client,
             await page,
             schema,
-            this.config?.prompt,
-            this.config?.temperature
+            options?.prompt,
+            options?.temperature
           )
         default:
           throw new Error('Invalid client')
