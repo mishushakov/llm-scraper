@@ -16,7 +16,7 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 }
 
 const defaultPrompt =
-  'You are a satistified web scraper. Extract the contents of the webpage'
+  'You are a satisfied web scraper. Extract the contents of the webpage'
 
 function prepareOpenAIPage(
   page: ScraperLoadResult
