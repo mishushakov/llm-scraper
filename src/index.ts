@@ -9,6 +9,8 @@ import {
   generateLlamaCompletions,
   generateOpenAICompletions,
 } from './models.js'
+import { existsSync, readFileSync } from 'fs'
+import { parse } from 'node-html-parser';
 
 export type ScraperLoadOptions = {
   mode?: 'html' | 'text' | 'markdown' | 'image'
@@ -29,11 +31,15 @@ export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
 } & ScraperLoadOptions
 
 export default class LLMScraper {
-  private context: BrowserContext
+  private context: BrowserContext | null = null;
 
-  constructor(private browser: Browser, private client: OpenAI | LlamaModel) {
+  constructor(private browser: Browser | null = null, private client: OpenAI | LlamaModel) {
     this.browser = browser
     this.client = client
+  }
+
+  private logger(text: string, ...args: any) {
+    console.log(`\x1b[36m[${this.constructor.name}]\x1b[0m ${text}`, ...args);
   }
 
   // Load pages in the browser
@@ -41,6 +47,7 @@ export default class LLMScraper {
     url: string | string[],
     options: ScraperLoadOptions = { mode: 'html' }
   ): Promise<Promise<ScraperLoadResult>[]> {
+    if (!this.browser) throw new Error('`browser` parameter must be defined in new LLMScraper(...args) args to use web loader.');
     this.context = await this.browser.newContext()
     const urls = Array.isArray(url) ? url : [url]
 
@@ -84,6 +91,63 @@ export default class LLMScraper {
         mode: options.mode,
       }
     })
+
+    return pages
+  }
+
+  // Load files from relative local URLs as FS objects.
+  private async loadFiles(
+    filePaths: string | string[],
+    options: ScraperLoadOptions = { mode: 'html' }
+  ): Promise<Promise<ScraperLoadResult>[]> {
+    const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
+    const pages = [];
+
+    for (const filePath of paths) {
+      if (!existsSync(filePath)) {
+        this.logger(`${filePath} does not exist - skipping`);
+        continue;
+      };
+
+      const htmlString = readFileSync(filePath, { encoding: 'utf-8' });
+      if (!htmlString) {
+        this.logger(`${filePath} content is empty - skipping`);
+        continue;
+      };
+
+      const page = parse(htmlString);
+      let content
+
+      if (options.mode === 'html') {
+        content = page.toString();
+      }
+
+      if (options.mode === 'markdown') {
+        const body = page.querySelector('body').innerHTML;
+        content = new Turndown().turndown(body)
+      }
+
+      if (options.mode === 'text') {
+        const readability = await import(
+          // @ts-ignore
+          'https://cdn.skypack.dev/@mozilla/readability'
+        )
+        const readable = new readability.Readability(page.toString()).parse()
+
+        content = `Page Title: ${readable.title}\n${readable.textContent}`
+      }
+
+      if (options.mode === 'image') {
+        this.logger(`'image' mode for options is not supported for local files.`);
+        continue;
+      };
+
+      pages.push({
+        filePath,
+        content,
+        mode: options.mode,
+      })
+    }
 
     return pages
   }
@@ -136,9 +200,17 @@ export default class LLMScraper {
     return this.generateCompletions<T>(pages, options)
   }
 
+  async runFiles<T extends z.ZodSchema<any>>(
+    filePaths: string | string[],
+    options: ScraperRunOptions<T>
+  ) {
+    const pages = await this.loadFiles(filePaths, options);
+    return this.generateCompletions<T>(pages, options)
+  }
+
   // Close the current context and the browser
   async close() {
-    await this.context.close()
-    await this.browser.close()
+    await this.context?.close()
+    await this.browser?.close()
   }
 }

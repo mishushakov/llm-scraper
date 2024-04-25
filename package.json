@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
+    "node-html-parser": "^6.1.13",
     "node-llama-cpp": "^2.8.9",
     "openai": "^4.38.2",
     "turndown": "^7.1.3",
