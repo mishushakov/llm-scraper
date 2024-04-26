@@ -1,10 +1,8 @@
 // Example will grab todays HN page and works a lot like examples/hn.ts but
-// does the parsing from a local HTML file instead of using chromium/playwright
+// does the parsing from a the RAW html response instead of using chromium/playwright
 import { z } from 'zod'
 import OpenAI from 'openai'
 import LLMScraper from '../src'
-import path from 'path'
-import { writeFileSync } from 'fs'
 
 // Initialize LLM provider
 const llm = new OpenAI()
