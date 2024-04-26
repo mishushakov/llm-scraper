@@ -152,6 +152,56 @@ export default class LLMScraper {
     return pages
   }
 
+  private async loadRawHTML(
+    htmlString: string | string[],
+    options: ScraperLoadOptions = { mode: 'html' }
+  ): Promise<Promise<ScraperLoadResult>[]> {
+    const roots = Array.isArray(htmlString) ? htmlString : [htmlString]
+    const pages = [];
+
+    for (const htmlRoot of roots) {
+      if (!htmlRoot) {
+        this.logger(`HTML content is empty - skipping`);
+        continue;
+      };
+
+      const page = parse(htmlRoot);
+      let content
+
+      if (options.mode === 'html') {
+        content = page.toString();
+      }
+
+      if (options.mode === 'markdown') {
+        const body = page.querySelector('body').innerHTML;
+        content = new Turndown().turndown(body)
+      }
+
+      if (options.mode === 'text') {
+        const readability = await import(
+          // @ts-ignore
+          'https://cdn.skypack.dev/@mozilla/readability'
+        )
+        const readable = new readability.Readability(page.toString()).parse()
+
+        content = `Page Title: ${readable.title}\n${readable.textContent}`
+      }
+
+      if (options.mode === 'image') {
+        this.logger(`'image' mode for options is not supported for local files.`);
+        continue;
+      };
+
+      pages.push({
+        htmlRoot, // maybe don't want to return entire HTML string back?
+        content,
+        mode: options.mode,
+      })
+    }
+
+    return pages
+  }
+
   // Generate completion using OpenAI
   private generateCompletions<T extends z.ZodSchema<any>>(
     pages: Promise<ScraperLoadResult>[],
@@ -191,6 +241,10 @@ export default class LLMScraper {
     return loader
   }
 
+  // TODO: Simplify this implementation
+  // as each entry will need another function
+  // and probably makes more sense to have one entry
+  // and delegate to the proper function.
   // Load pages and generate completion
   async run<T extends z.ZodSchema<any>>(
     url: string | string[],
@@ -205,6 +259,14 @@ export default class LLMScraper {
     options: ScraperRunOptions<T>
   ) {
     const pages = await this.loadFiles(filePaths, options);
+    return this.generateCompletions<T>(pages, options)
+  }
+
+  async rawHTML<T extends z.ZodSchema<any>>(
+    htmlString: string | string[],
+    options: ScraperRunOptions<T>
+  ) {
+    const pages = await this.loadRawHTML(htmlString, options);
     return this.generateCompletions<T>(pages, options)
   }
 
