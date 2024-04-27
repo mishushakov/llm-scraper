@@ -41,6 +41,21 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
    const model = new OpenAI()
    ```
 
+   **Groq**
+
+   ```js
+   import OpenAI from 'openai'
+   const model = new OpenAI({
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
+   })
+
+   // Note!
+   // Tool calls are used so only the models listed here are supported for Groq
+   // when invoking any .run(...) call
+   // https://console.groq.com/docs/tool-use
+   ```
+
    **Local**
 
    ```js
