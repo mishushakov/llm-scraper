@@ -13,6 +13,7 @@ import { JsonSchema7Type } from 'zod-to-json-schema'
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   data: z.infer<T> | null
   url: string
+  error: any
 }
 
 const defaultPrompt =
@@ -66,11 +67,20 @@ export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
     tool_choice: 'auto',
     temperature,
   })
+  let c: any
+  let errorMessage: any
+  try {
+    c = JSON.parse(completion.choices[0].message.tool_calls[0].function.arguments)
+  } catch (e) {
+    console.error('Error parsing OpenAI completion', e)
+    e ? errorMessage = JSON.stringify(e) : errorMessage = "Something went wrong"
+    c = completion.choices[0].message.content
+  }
 
-  const c = completion.choices[0].message.tool_calls[0].function.arguments
   return {
-    data: JSON.parse(c),
+    data: c,
     url: page.url,
+    error: errorMessage,
   }
 }
 
@@ -85,15 +95,24 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
   const pagePrompt = `${prompt}\n${page.content}`
+  let result: string
+  let errorMessage: any
+  try {
+    result = await session.prompt(pagePrompt, {
+      grammar,
+      temperature,
+    })
+  } catch (e) {
+    console.error('Error generating Llama completions', e)
+    e ? errorMessage = JSON.stringify(e) : errorMessage = "Something went wrong"
+    result = "Error"
+  }
 
-  const result = await session.prompt(pagePrompt, {
-    grammar,
-    temperature,
-  })
 
   const parsed = grammar.parse(result)
   return {
     data: parsed,
     url: page.url,
+    error: errorMessage,
   }
 }
