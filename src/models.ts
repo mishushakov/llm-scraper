@@ -9,7 +9,6 @@ import {
   GbnfJsonSchema,
 } from 'node-llama-cpp'
 import { JsonSchema7Type } from 'zod-to-json-schema'
-import { error } from 'console'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   data: z.infer<T> | null
