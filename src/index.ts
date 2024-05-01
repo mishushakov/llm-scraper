@@ -10,10 +10,14 @@ import {
   generateOpenAICompletions,
 } from './models.js'
 
-export type ScraperLoadOptions = {
-  mode?: 'html' | 'text' | 'markdown' | 'image'
-  closeOnFinish?: boolean
-}
+export type ScraperLoadOptionsBase = {
+  closeOnFinish?: boolean;
+};
+
+export type ScraperLoadOptions = ScraperLoadOptionsBase & (
+  | { mode: 'image'; fullPage?: boolean } // if mode: image, allow fullPage boolean.
+  | { mode: 'html' | 'text' | 'markdown' }
+);
 
 export type ScraperLoadResult = {
   url: string
@@ -73,7 +77,7 @@ export default class LLMScraper {
       }
 
       if (options.mode === 'image') {
-        const image = await page.screenshot()
+        const image = await page.screenshot({ fullPage: options?.fullPage || false })
         content = image.toString('base64')
       }
 
