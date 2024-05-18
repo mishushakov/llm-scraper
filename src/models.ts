@@ -1,5 +1,5 @@
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { experimental_generateObject, UserContent } from 'ai'
+import { generateObject, UserContent } from 'ai'
 import { z } from 'zod'
 import { ScraperLoadResult } from './index.js'
 import {
@@ -47,7 +47,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   temperature?: number
 ) {
   const content = prepareAISDKPage(prompt, page)
-  const result = await experimental_generateObject({
+  const result = await generateObject({
     model,
     schema,
     messages: [{ role: 'user', content }],
