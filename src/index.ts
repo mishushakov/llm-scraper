@@ -1,13 +1,12 @@
 import { Browser, BrowserContext } from 'playwright'
 import Turndown from 'turndown'
-import OpenAI from 'openai'
+import { LanguageModelV1 } from '@ai-sdk/provider'
 import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 import {
   ScraperCompletionResult,
   generateLlamaCompletions,
-  generateOpenAICompletions,
+  generateAISDKCompletions,
 } from './models.js'
 
 export type ScraperLoadOptions = {
@@ -31,7 +30,10 @@ export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
 export default class LLMScraper {
   private context: BrowserContext
 
-  constructor(private browser: Browser, private client: OpenAI | LlamaModel) {
+  constructor(
+    private browser: Browser,
+    private client: LanguageModelV1 | LlamaModel
+  ) {
     this.browser = browser
     this.client = client
   }
@@ -88,20 +90,18 @@ export default class LLMScraper {
     return pages
   }
 
-  // Generate completion using OpenAI
+  // Generate completion using AISDK
   private generateCompletions<T extends z.ZodSchema<any>>(
     pages: Promise<ScraperLoadResult>[],
     options: ScraperRunOptions<T>
   ): Promise<ScraperCompletionResult<T>>[] {
-    const schema = zodToJsonSchema(options.schema)
     const loader = pages.map(async (page, i) => {
       switch (this.client.constructor) {
-        case OpenAI:
-          return generateOpenAICompletions<T>(
-            this.client as OpenAI,
-            options.model,
+        default:
+          return generateAISDKCompletions<T>(
+            this.client as LanguageModelV1,
             await page,
-            schema,
+            options.schema,
             options?.prompt,
             options?.temperature
           )
@@ -109,12 +109,10 @@ export default class LLMScraper {
           return generateLlamaCompletions<T>(
             this.client,
             await page,
-            schema,
+            options.schema,
             options?.prompt,
             options?.temperature
           )
-        default:
-          throw new Error('Invalid client')
       }
     })
 

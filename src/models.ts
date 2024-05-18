@@ -1,4 +1,5 @@
-import OpenAI from 'openai'
+import { LanguageModelV1 } from '@ai-sdk/provider'
+import { generateObject, UserContent } from 'ai'
 import { z } from 'zod'
 import { ScraperLoadResult } from './index.js'
 import {
@@ -8,7 +9,7 @@ import {
   LlamaChatSession,
   GbnfJsonSchema,
 } from 'node-llama-cpp'
-import { JsonSchema7Type } from 'zod-to-json-schema'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
   data: z.infer<T> | null
@@ -18,58 +19,43 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 const defaultPrompt =
   'You are a satistified web scraper. Extract the contents of the webpage'
 
-function prepareOpenAIPage(
+function prepareAISDKPage(
+  prompt: string,
   page: ScraperLoadResult
-): OpenAI.Chat.Completions.ChatCompletionContentPart[] {
+): UserContent {
   if (page.mode === 'image') {
     return [
+      { type: 'text', text: prompt },
       {
-        type: 'image_url',
-        image_url: { url: `data:image/jpeg;base64,${page.content}` },
+        type: 'image',
+        image: page.content,
       },
     ]
   }
 
-  return [{ type: 'text', text: page.content }]
+  return [
+    { type: 'text', text: prompt },
+    { type: 'text', text: page.content },
+  ]
 }
 
-export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
-  client: OpenAI,
-  model: string = 'gpt-3.5-turbo',
+export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
+  model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: JsonSchema7Type,
+  schema: T,
   prompt: string = defaultPrompt,
   temperature?: number
-): Promise<ScraperCompletionResult<T>> {
-  const openai = client as OpenAI
-  const content = prepareOpenAIPage(page)
-
-  const completion = await openai.chat.completions.create({
+) {
+  const content = prepareAISDKPage(prompt, page)
+  const result = await generateObject({
     model,
-    messages: [
-      {
-        role: 'system',
-        content: prompt,
-      },
-      { role: 'user', content },
-    ],
-    tools: [
-      {
-        type: 'function',
-        function: {
-          name: 'extract_content',
-          description: 'Extracts the content from the given webpage(s)',
-          parameters: schema,
-        },
-      },
-    ],
-    tool_choice: 'auto',
+    schema,
+    messages: [{ role: 'user', content }],
     temperature,
   })
 
-  const c = completion.choices[0].message.tool_calls[0].function.arguments
   return {
-    data: JSON.parse(c),
+    data: result.object,
     url: page.url,
   }
 }
@@ -77,11 +63,12 @@ export async function generateOpenAICompletions<T extends z.ZodSchema<any>>(
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   model: LlamaModel,
   page: ScraperLoadResult,
-  schema: JsonSchema7Type,
+  schema: T,
   prompt: string = defaultPrompt,
   temperature?: number
 ): Promise<ScraperCompletionResult<T>> {
-  const grammar = new LlamaJsonSchemaGrammar(schema as GbnfJsonSchema) as any // any, because it has weird type inference going on
+  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
+  const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
   const pagePrompt = `${prompt}\n${page.content}`
