@@ -1,13 +1,13 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import LLMScraper from './../src'
 
 // Launch a browser instance
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = anthropic.chat('claude-3-haiku-20240307')
+const llm = openai.chat('gpt-4o')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(browser, llm)
