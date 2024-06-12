@@ -52,6 +52,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
     schema,
     messages: [{ role: 'user', content }],
     temperature,
+    mode: 'json',
   })
 
   return {
