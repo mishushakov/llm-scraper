@@ -8,9 +8,10 @@ import {
   generateLlamaCompletions,
   generateAISDKCompletions,
 } from './models.js'
+import { clean } from './dom/prune.js'
 
 export type ScraperLoadOptions = {
-  mode?: 'html' | 'text' | 'markdown' | 'image'
+  mode?: 'html' | 'pruned_html' | 'text' | 'markdown' | 'image'
   closeOnFinish?: boolean
 }
 
@@ -41,7 +42,7 @@ export default class LLMScraper {
   // Load pages in the browser
   private async load(
     url: string | string[],
-    options: ScraperLoadOptions = { mode: 'html' }
+    options: ScraperLoadOptions = { mode: 'pruned_html' }
   ): Promise<Promise<ScraperLoadResult>[]> {
     this.context = await this.browser.newContext()
     const urls = Array.isArray(url) ? url : [url]
@@ -52,8 +53,14 @@ export default class LLMScraper {
 
       let content
 
-      if (options.mode === 'html') {
+      if (options.mode === 'html' || options.mode === 'pruned_html') {
         content = await page.content()
+      }
+
+      if (options.mode === 'pruned_html') {
+        const before = content.length;
+        content = clean(content)
+        console.log("content.length before:", before, "content.length after:", content.length)
       }
 
       if (options.mode === 'markdown') {
