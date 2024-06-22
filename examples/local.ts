@@ -12,24 +12,24 @@ const modelPath =
 const llm = new LlamaModel({ modelPath })
 
 // Initialize a new LLMScraper with local model
-const scraper = new LLMScraper(browser, llm)
+const scraper = new LLMScraper(llm)
+
+// Open the page
+const page = await browser.newPage()
+await page.goto('https://example.com')
 
 // Define schema to extract contents into
 const schema = z.object({
   h1: z.string().describe('The main heading of the page'),
 })
 
-// URLs to scrape
-const urls = ['https://example.com', 'https://browserbase.com']
-
 // Run the scraper
-const pages = await scraper.run(urls, {
+const { data } = await scraper.run(page, {
   schema,
   mode: 'text',
-  closeOnFinish: true,
 })
 
-// Stream the result from LLM
-for await (const page of pages) {
-  console.log(page.data)
-}
+console.log(data)
+
+await page.close()
+await browser.close()

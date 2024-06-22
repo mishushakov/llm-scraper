@@ -13,7 +13,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
-- Streaming when crawling multiple pages
+- Streaming objects
 - Supports 4 input modes:
   - `html` for loading raw HTML
   - `markdown` for loading markdown
@@ -42,7 +42,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
    ```js
    import { openai } from '@ai-sdk/openai'
-   const model = openai.chat('gpt-4o')
+   const llm = openai.chat('gpt-4o')
    ```
 
    **Groq**
@@ -58,24 +58,21 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
      apiKey: process.env.GROQ_API_KEY,
    })
 
-   const model = groq('llama3-8b-8192')
+   const llm = groq('llama3-8b-8192')
    ```
 
    **Local**
 
    ```js
    import { LlamaModel } from 'node-llama-cpp'
-   const model = new LlamaModel({ modelPath: 'model.gguf' })
+   const llm = new LlamaModel({ modelPath: 'model.gguf' })
    ```
 
-3. Create a new browser instance and attach LLMScraper to it:
+3. Create a new scraper instance provided with the llm:
 
    ```js
-   import { chromium } from 'playwright'
    import LLMScraper from 'llm-scraper'
-
-   const browser = await chromium.launch()
-   const scraper = new LLMScraper(browser, model)
+   const scraper = new LLMScraper(llm)
    ```
 
 ## Example
@@ -85,17 +82,21 @@ In this example, we're extracting top stories from HackerNews:
 ```ts
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import OpenAI from 'openai'
+import { openai } from '@ai-sdk/openai'
 import LLMScraper from 'llm-scraper'
 
 // Launch a browser instance
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = new OpenAI()
+const llm = openai.chat('gpt-4o')
 
 // Create a new LLMScraper
-const scraper = new LLMScraper(browser, llm)
+const scraper = new LLMScraper(llm)
+
+// Open new page
+const page = await browser.newPage()
+await page.goto('https://news.ycombinator.com')
 
 // Define schema to extract contents into
 const schema = z.object({
@@ -112,21 +113,17 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// URLs to scrape
-const urls = ['https://news.ycombinator.com']
-
 // Run the scraper
-const pages = await scraper.run(urls, {
-  model: 'gpt-4-turbo',
+const { data } = await scraper.run(page, {
   schema,
   mode: 'html',
-  closeOnFinish: true,
 })
 
-// Stream the result from LLM
-for await (const page of pages) {
-  console.log(page.data)
-}
+// Show the result from LLM
+console.log(data?.top)
+
+await page.close()
+await browser.close()
 ```
 
 ## Contributing

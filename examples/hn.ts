@@ -10,7 +10,11 @@ const browser = await chromium.launch()
 const llm = openai.chat('gpt-4o')
 
 // Create a new LLMScraper
-const scraper = new LLMScraper(browser, llm)
+const scraper = new LLMScraper(llm)
+
+// Open new page
+const page = await browser.newPage()
+await page.goto('https://news.ycombinator.com')
 
 // Define schema to extract contents into
 const schema = z.object({
@@ -27,17 +31,14 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// URLs to scrape
-const urls = ['https://news.ycombinator.com']
-
 // Run the scraper
-const pages = await scraper.run(urls, {
+const { data } = await scraper.run(page, {
   schema,
   mode: 'html',
-  closeOnFinish: true,
 })
 
-// Stream the result from LLM
-for await (const page of pages) {
-  console.log(page.data?.top)
-}
+// Show the result from LLM
+console.log(data?.top)
+
+await page.close()
+await browser.close()
