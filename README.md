@@ -126,6 +126,23 @@ await page.close()
 await browser.close()
 ```
 
+### Streaming
+
+Replace your `run` function with `stream` to get a partial object stream (Vercel AI SDK only).
+
+```ts
+// Run the scraper
+const { stream } = await scraper.stream(page, {
+  schema,
+  mode: 'html',
+})
+
+// Stream the result from LLM
+for await (const data of stream) {
+  console.log(data.top)
+}
+```
+
 ## Contributing
 
 As an open-source project, we welcome contributions from the community. If you are experiencing any bugs or want to add some improvements, please feel free to open an issue or pull request.

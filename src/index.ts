@@ -7,6 +7,7 @@ import {
   ScraperCompletionResult,
   generateLlamaCompletions,
   generateAISDKCompletions,
+  streamAISDKCompletions,
 } from './models.js'
 
 export type ScraperLoadOptions = {
@@ -77,7 +78,7 @@ export default class LLMScraper {
     }
   }
 
-  // Generate completion using AISDK
+  // Generate completion using AI SDK
   private async generateCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
     options: ScraperRunOptions<T>
@@ -94,12 +95,38 @@ export default class LLMScraper {
     }
   }
 
-  // Load pages and generate completion
+  // Stream completions using AI SDK
+  private async streamCompletions<T extends z.ZodSchema<any>>(
+    page: ScraperLoadResult,
+    options: ScraperRunOptions<T>
+  ) {
+    switch (this.client.constructor) {
+      default:
+        return streamAISDKCompletions<T>(
+          this.client as LanguageModelV1,
+          page,
+          options
+        )
+      case LlamaModel:
+        throw new Error('Streaming not supported for local models yet')
+    }
+  }
+
+  // Pre-process the page and generate completion
   async run<T extends z.ZodSchema<any>>(
     page: Page,
     options: ScraperRunOptions<T>
   ) {
     const preprocessed = await this.preprocess(page, options)
     return this.generateCompletions<T>(preprocessed, options)
+  }
+
+  // Pre-process the page and generate completion
+  async stream<T extends z.ZodSchema<any>>(
+    page: Page,
+    options: ScraperRunOptions<T>
+  ) {
+    const preprocessed = await this.preprocess(page, options)
+    return this.streamCompletions<T>(preprocessed, options)
   }
 }

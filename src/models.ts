@@ -1,5 +1,5 @@
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { generateObject, UserContent } from 'ai'
+import { generateObject, streamObject, UserContent } from 'ai'
 import { z } from 'zod'
 import { ScraperLoadResult, ScraperLLMOptions } from './index.js'
 import {
@@ -56,6 +56,27 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
 
   return {
     data: result.object,
+    url: page.url,
+  }
+}
+
+export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
+  model: LanguageModelV1,
+  page: ScraperLoadResult,
+  options: ScraperLLMOptions<T>
+) {
+  const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
+  const { partialObjectStream } = await streamObject<T>({
+    model,
+    messages: [{ role: 'user', content }],
+    schema: options.schema,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
+  })
+
+  return {
+    stream: partialObjectStream,
     url: page.url,
   }
 }
