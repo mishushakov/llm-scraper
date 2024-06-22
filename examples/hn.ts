@@ -1,6 +1,6 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import { openai } from '@ai-sdk/openai';
+import { openai } from '@ai-sdk/openai'
 import LLMScraper from './../src'
 
 // Launch a browser instance
