@@ -1,7 +1,7 @@
 import { LanguageModelV1 } from '@ai-sdk/provider'
 import { generateObject, UserContent } from 'ai'
 import { z } from 'zod'
-import { ScraperLoadResult } from './index.js'
+import { ScraperLoadResult, ScraperLLMOptions } from './index.js'
 import {
   LlamaModel,
   LlamaJsonSchemaGrammar,
@@ -17,7 +17,7 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 }
 
 const defaultPrompt =
-  'You are a satistified web scraper. Extract the contents of the webpage'
+  'You are a sophisticated web scraper. Extract the contents of the webpage'
 
 function prepareAISDKPage(
   prompt: string,
@@ -42,16 +42,16 @@ function prepareAISDKPage(
 export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: T,
-  prompt: string = defaultPrompt,
-  temperature?: number
+  options: ScraperLLMOptions<T>
 ) {
-  const content = prepareAISDKPage(prompt, page)
+  const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
   const result = await generateObject({
     model,
-    schema,
     messages: [{ role: 'user', content }],
-    temperature,
+    schema: options.schema,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
   })
 
   return {
@@ -63,11 +63,9 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   model: LlamaModel,
   page: ScraperLoadResult,
-  schema: T,
-  prompt: string = defaultPrompt,
-  temperature?: number
+  options: ScraperLLMOptions<T>
 ): Promise<ScraperCompletionResult<T>> {
-  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
+  const generatedSchema = zodToJsonSchema(options.schema) as GbnfJsonSchema
   const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
@@ -75,7 +73,9 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
 
   const result = await session.prompt(pagePrompt, {
     grammar,
-    temperature,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
   })
 
   const parsed = grammar.parse(result)

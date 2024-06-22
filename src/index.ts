@@ -19,11 +19,16 @@ export type ScraperLoadResult = {
   mode: ScraperLoadOptions['mode']
 }
 
-export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
+export type ScraperLLMOptions<T extends z.ZodSchema<any>> = {
   schema: T
   prompt?: string
   temperature?: number
-} & ScraperLoadOptions
+  maxTokens?: number
+  topP?: number
+}
+
+export type ScraperRunOptions<T extends z.ZodSchema<any>> =
+  ScraperLLMOptions<T> & ScraperLoadOptions
 
 export default class LLMScraper {
   constructor(private client: LanguageModelV1 | LlamaModel) {
@@ -81,19 +86,11 @@ export default class LLMScraper {
       default:
         return generateAISDKCompletions<T>(
           this.client as LanguageModelV1,
-          await page,
-          options.schema,
-          options?.prompt,
-          options?.temperature
+          page,
+          options
         )
       case LlamaModel:
-        return generateLlamaCompletions<T>(
-          this.client,
-          await page,
-          options.schema,
-          options?.prompt,
-          options?.temperature
-        )
+        return generateLlamaCompletions<T>(this.client, page, options)
     }
   }
 
