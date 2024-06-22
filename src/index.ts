@@ -22,7 +22,6 @@ export type ScraperLoadResult = {
 
 export type ScraperRunOptions<T extends z.ZodSchema<any>> = {
   schema: T
-  model?: string
   prompt?: string
   temperature?: number
 } & ScraperLoadOptions

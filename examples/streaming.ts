@@ -27,7 +27,6 @@ const urls = [
 
 // Run the scraper
 const pages = await scraper.run(urls, {
-  model: 'gpt-4-turbo',
   schema,
   mode: 'text',
   closeOnFinish: true,
