@@ -90,7 +90,7 @@ export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })
-  const pagePrompt = `${prompt}\n${page.content}`
+  const pagePrompt = `${options.prompt}\n${page.content}`
 
   const result = await session.prompt(pagePrompt, {
     grammar,
