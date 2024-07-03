@@ -74,7 +74,7 @@ export default class LLMScraper {
 
     if (options.mode === 'custom') {
       if(options.customPreprocessor === undefined)
-        throw new Error('customPreprocessor is required for custom mode');
+        throw new Error('customPreprocessor must be provided in custom mode');
       content = await options.customPreprocessor(page)
     }
 
