@@ -131,7 +131,7 @@ const { data } = await scraper.run(page, schema, {
 })
 
 // Show the result from LLM
-console.log(data?.top)
+console.log(data.top)
 
 await page.close()
 await browser.close()

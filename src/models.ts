@@ -12,7 +12,7 @@ import {
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
-  data: z.infer<T> | null
+  data: z.infer<T>
   url: string
 }
 
