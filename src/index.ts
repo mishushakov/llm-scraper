@@ -10,10 +10,15 @@ import {
   streamAISDKCompletions,
 } from './models.js'
 
-export type ScraperLoadOptions = {
-  mode?: 'html' | 'text' | 'markdown' | 'image' | 'custom'
-  customPreprocessor?: (page: Page) => Promise<string> | string
-}
+export type ScraperLoadOptions =
+  | {
+      mode?: 'html' | 'text' | 'markdown' | 'custom'
+      customPreprocessor?: (page: Page) => Promise<string> | string
+    }
+  | {
+      mode: 'image'
+      fullPage?: boolean
+    }
 
 export type ScraperLoadResult = {
   url: string
@@ -68,7 +73,7 @@ export default class LLMScraper {
     }
 
     if (options.mode === 'image') {
-      const image = await page.screenshot()
+      const image = await page.screenshot({ fullPage: options.fullPage })
       content = image.toString('base64')
     }
 
