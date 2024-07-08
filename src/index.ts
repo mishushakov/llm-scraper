@@ -4,7 +4,6 @@ import { LanguageModelV1 } from '@ai-sdk/provider'
 import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
 import {
-  ScraperCompletionResult,
   generateLlamaCompletions,
   generateAISDKCompletions,
   streamAISDKCompletions,
@@ -101,7 +100,7 @@ export default class LLMScraper {
     page: ScraperLoadResult,
     schema: T,
     options: ScraperRunOptions
-  ): Promise<ScraperCompletionResult<T>> {
+  ) {
     switch (this.client.constructor) {
       default:
         return generateAISDKCompletions<T>(

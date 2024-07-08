@@ -46,11 +46,13 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   options: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
-  const result = await generateObject({
+  const result = await generateObject<z.infer<T>>({
     model,
     messages: [{ role: 'user', content }],
     schema,
-    ...options
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
   })
 
   return {
@@ -66,11 +68,13 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   options: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
-  const { partialObjectStream } = await streamObject<T>({
+  const { partialObjectStream } = await streamObject<z.infer<T>>({
     model,
     messages: [{ role: 'user', content }],
     schema,
-    ...options
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
   })
 
   return {
