@@ -11,8 +11,8 @@ import {
 } from './models.js'
 
 export type ScraperLoadOptions = {
-  mode?: 'html' | 'text' | 'markdown' | 'image' | 'custom',
-  customPreprocessor?: (page: Page) => Promise<string>
+  mode?: 'html' | 'text' | 'markdown' | 'image' | 'custom'
+  customPreprocessor?: (page: Page) => Promise<string> | string
 }
 
 export type ScraperLoadResult = {
@@ -73,8 +73,13 @@ export default class LLMScraper {
     }
 
     if (options.mode === 'custom') {
-      if(options.customPreprocessor === undefined)
-        throw new Error('customPreprocessor must be provided in custom mode');
+      if (
+        !options.customPreprocessor ||
+        typeof options.customPreprocessor !== 'function'
+      ) {
+        throw new Error('customPreprocessor must be provided in custom mode')
+      }
+
       content = await options.customPreprocessor(page)
     }
 
