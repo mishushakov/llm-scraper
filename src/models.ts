@@ -23,7 +23,7 @@ function prepareAISDKPage(
   prompt: string,
   page: ScraperLoadResult
 ): UserContent {
-  if (page.mode === 'image') {
+  if (page.format === 'image') {
     return [
       { type: 'text', text: prompt },
       {
@@ -42,16 +42,15 @@ function prepareAISDKPage(
 export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  options: ScraperLLMOptions<T>
+  schema: T,
+  options: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
   const result = await generateObject({
     model,
     messages: [{ role: 'user', content }],
-    schema: options.schema,
-    temperature: options.temperature,
-    maxTokens: options.maxTokens,
-    topP: options.topP,
+    schema,
+    ...options
   })
 
   return {
@@ -63,16 +62,15 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
 export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  options: ScraperLLMOptions<T>
+  schema: T,
+  options: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
   const { partialObjectStream } = await streamObject<T>({
     model,
     messages: [{ role: 'user', content }],
-    schema: options.schema,
-    temperature: options.temperature,
-    maxTokens: options.maxTokens,
-    topP: options.topP,
+    schema,
+    ...options
   })
 
   return {
@@ -84,9 +82,10 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
   model: LlamaModel,
   page: ScraperLoadResult,
-  options: ScraperLLMOptions<T>
+  schema: T,
+  options: ScraperLLMOptions
 ): Promise<ScraperCompletionResult<T>> {
-  const generatedSchema = zodToJsonSchema(options.schema) as GbnfJsonSchema
+  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
   const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
   const context = new LlamaContext({ model })
   const session = new LlamaChatSession({ context })

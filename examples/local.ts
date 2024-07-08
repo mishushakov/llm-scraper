@@ -24,9 +24,8 @@ const schema = z.object({
 })
 
 // Run the scraper
-const { data } = await scraper.run(page, {
-  schema,
-  mode: 'text',
+const { data } = await scraper.run(page, schema, {
+  format: 'text',
 })
 
 console.log(data)

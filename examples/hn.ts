@@ -32,9 +32,8 @@ const schema = z.object({
 })
 
 // Run the scraper
-const { data } = await scraper.run(page, {
-  schema,
-  mode: 'html',
+const { data } = await scraper.run(page, schema, {
+  format: 'html',
 })
 
 // Show the result from LLM

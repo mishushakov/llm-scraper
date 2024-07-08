@@ -12,30 +12,31 @@ import {
 
 export type ScraperLoadOptions =
   | {
-      mode?: 'html' | 'text' | 'markdown' | 'custom'
-      customPreprocessor?: (page: Page) => Promise<string> | string
+      format?: 'html' | 'text' | 'markdown'
     }
   | {
-      mode: 'image'
+      format: 'custom'
+      formatFunction: (page: Page) => Promise<string> | string
+    }
+  | {
+      format: 'image'
       fullPage?: boolean
     }
 
 export type ScraperLoadResult = {
   url: string
   content: string
-  mode: ScraperLoadOptions['mode']
+  format: ScraperLoadOptions['format']
 }
 
-export type ScraperLLMOptions<T extends z.ZodSchema<any>> = {
-  schema: T
+export type ScraperLLMOptions = {
   prompt?: string
   temperature?: number
   maxTokens?: number
   topP?: number
 }
 
-export type ScraperRunOptions<T extends z.ZodSchema<any>> =
-  ScraperLLMOptions<T> & ScraperLoadOptions
+export type ScraperRunOptions = ScraperLLMOptions & ScraperLoadOptions
 
 export default class LLMScraper {
   constructor(private client: LanguageModelV1 | LlamaModel) {
@@ -45,21 +46,21 @@ export default class LLMScraper {
   // Pre-process a page
   private async preprocess(
     page: Page,
-    options: ScraperLoadOptions = { mode: 'html' }
+    options: ScraperLoadOptions = { format: 'html' }
   ): Promise<ScraperLoadResult> {
     const url = page.url()
     let content
 
-    if (options.mode === 'html') {
+    if (options.format === 'html') {
       content = await page.content()
     }
 
-    if (options.mode === 'markdown') {
+    if (options.format === 'markdown') {
       const body = await page.innerHTML('body')
       content = new Turndown().turndown(body)
     }
 
-    if (options.mode === 'text') {
+    if (options.format === 'text') {
       const readable = await page.evaluate(async () => {
         const readability = await import(
           // @ts-ignore
@@ -72,56 +73,60 @@ export default class LLMScraper {
       content = `Page Title: ${readable.title}\n${readable.textContent}`
     }
 
-    if (options.mode === 'image') {
+    if (options.format === 'image') {
       const image = await page.screenshot({ fullPage: options.fullPage })
       content = image.toString('base64')
     }
 
-    if (options.mode === 'custom') {
+    if (options.format === 'custom') {
       if (
-        !options.customPreprocessor ||
-        typeof options.customPreprocessor !== 'function'
+        !options.formatFunction ||
+        typeof options.formatFunction !== 'function'
       ) {
         throw new Error('customPreprocessor must be provided in custom mode')
       }
 
-      content = await options.customPreprocessor(page)
+      content = await options.formatFunction(page)
     }
 
     return {
       url,
       content,
-      mode: options.mode,
+      format: options.format,
     }
   }
 
   // Generate completion using AI SDK
   private async generateCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
-    options: ScraperRunOptions<T>
+    schema: T,
+    options: ScraperRunOptions
   ): Promise<ScraperCompletionResult<T>> {
     switch (this.client.constructor) {
       default:
         return generateAISDKCompletions<T>(
           this.client as LanguageModelV1,
           page,
+          schema,
           options
         )
       case LlamaModel:
-        return generateLlamaCompletions<T>(this.client, page, options)
+        return generateLlamaCompletions<T>(this.client, page, schema, options)
     }
   }
 
   // Stream completions using AI SDK
   private async streamCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
-    options: ScraperRunOptions<T>
+    schema: T,
+    options: ScraperRunOptions
   ) {
     switch (this.client.constructor) {
       default:
         return streamAISDKCompletions<T>(
           this.client as LanguageModelV1,
           page,
+          schema,
           options
         )
       case LlamaModel:
@@ -132,18 +137,20 @@ export default class LLMScraper {
   // Pre-process the page and generate completion
   async run<T extends z.ZodSchema<any>>(
     page: Page,
-    options: ScraperRunOptions<T>
+    schema: T,
+    options: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
-    return this.generateCompletions<T>(preprocessed, options)
+    return this.generateCompletions<T>(preprocessed, schema, options)
   }
 
   // Pre-process the page and generate completion
   async stream<T extends z.ZodSchema<any>>(
     page: Page,
-    options: ScraperRunOptions<T>
+    schema: T,
+    options: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
-    return this.streamCompletions<T>(preprocessed, options)
+    return this.streamCompletions<T>(preprocessed, schema, options)
   }
 }

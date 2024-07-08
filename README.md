@@ -126,9 +126,8 @@ const schema = z.object({
 })
 
 // Run the scraper
-const { data } = await scraper.run(page, {
-  schema,
-  mode: 'html',
+const { data } = await scraper.run(page, schema, {
+  format: 'html',
 })
 
 // Show the result from LLM
@@ -144,9 +143,8 @@ Replace your `run` function with `stream` to get a partial object stream (Vercel
 
 ```ts
 // Run the scraper
-const { stream } = await scraper.stream(page, {
-  schema,
-  mode: 'html',
+const { stream } = await scraper.stream(page, schema, {
+  format: 'html',
 })
 
 // Stream the result from LLM
