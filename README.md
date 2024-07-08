@@ -9,7 +9,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
 ### Features
 
-- Supports **Local (GGUF)**, OpenAI, Groq chat models
+- Supports **Local (Ollama, GGUF)**, OpenAI, Vercel AI SDK Providers
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
@@ -53,7 +53,7 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
    ```js
    import { createOpenAI } from '@ai-sdk/openai'
-   const groq = new OpenAI({
+   const groq = createOpenAI({
      baseURL: 'https://api.groq.com/openai/v1',
      apiKey: process.env.GROQ_API_KEY,
    })
@@ -61,7 +61,15 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
    const llm = groq('llama3-8b-8192')
    ```
 
-   **Local**
+   **Ollama**
+
+   ```js
+   import { ollama } from 'ollama-ai-provider'
+
+   const llm = ollama('llama3')
+   ```
+
+   **GGUF**
 
    ```js
    import { LlamaModel } from 'node-llama-cpp'
