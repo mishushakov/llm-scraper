@@ -63,6 +63,10 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 
    **Ollama**
 
+   ```
+   npm i ollama-ai-provider
+   ```
+
    ```js
    import { ollama } from 'ollama-ai-provider'
 
