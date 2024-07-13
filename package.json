@@ -32,6 +32,7 @@
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
+    "@ai-sdk/anthropic": "^0.0.30",
     "@ai-sdk/openai": "^0.0.2",
     "@types/node": "^20.12.7",
     "@types/react": "^18.2.79",
