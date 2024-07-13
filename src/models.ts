@@ -19,8 +19,8 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
-const defaultCodePrompt = `Provide a scraping function (extract) in JavaScript that extracts and formats data according to a schema from the current page.
-Use const syntax. Call the function. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code.`
+const defaultCodePrompt = `Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page.
+The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code.`
 
 function prepareAISDKPage(page: ScraperLoadResult): UserContent {
   if (page.format === 'image') {
