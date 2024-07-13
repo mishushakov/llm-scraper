@@ -9,9 +9,11 @@ import {
   streamAISDKCompletions,
 } from './models.js'
 
+import cleanup from './cleanup.js'
+
 export type ScraperLoadOptions =
   | {
-      format?: 'html' | 'text' | 'markdown'
+      format?: 'html' | 'text' | 'markdown' | 'cleanup'
     }
   | {
       format: 'custom'
@@ -70,6 +72,11 @@ export default class LLMScraper {
       })
 
       content = `Page Title: ${readable.title}\n${readable.textContent}`
+    }
+
+    if (options.format === 'cleanup') {
+      await page.evaluate(cleanup)
+      content = await page.content()
     }
 
     if (options.format === 'image') {
