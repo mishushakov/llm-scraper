@@ -19,13 +19,9 @@ export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
 const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
-function prepareAISDKPage(
-  prompt: string,
-  page: ScraperLoadResult
-): UserContent {
+function prepareAISDKPage(page: ScraperLoadResult): UserContent {
   if (page.format === 'image') {
     return [
-      { type: 'text', text: prompt },
       {
         type: 'image',
         image: page.content,
@@ -33,10 +29,7 @@ function prepareAISDKPage(
     ]
   }
 
-  return [
-    { type: 'text', text: prompt },
-    { type: 'text', text: page.content },
-  ]
+  return [{ type: 'text', text: page.content }]
 }
 
 export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
@@ -45,10 +38,13 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   schema: T,
   options: ScraperLLMOptions
 ) {
-  const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
+  const content = prepareAISDKPage(page)
   const result = await generateObject<z.infer<T>>({
     model,
-    messages: [{ role: 'user', content }],
+    messages: [
+      { role: 'system', content: options.prompt || defaultPrompt },
+      { role: 'user', content },
+    ],
     schema,
     temperature: options.temperature,
     maxTokens: options.maxTokens,
@@ -68,10 +64,13 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   schema: T,
   options: ScraperLLMOptions
 ) {
-  const content = prepareAISDKPage(options.prompt || defaultPrompt, page)
+  const content = prepareAISDKPage(page)
   const { partialObjectStream } = await streamObject<z.infer<T>>({
     model,
-    messages: [{ role: 'user', content }],
+    messages: [
+      { role: 'system', content: options.prompt || defaultPrompt },
+      { role: 'user', content },
+    ],
     schema,
     temperature: options.temperature,
     maxTokens: options.maxTokens,
