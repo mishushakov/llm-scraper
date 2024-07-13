@@ -2,7 +2,7 @@
 
 <img width="1800" alt="Screenshot 2024-04-20 at 23 11 16" src="https://github.com/mishushakov/llm-scraper/assets/10400064/ab00e048-a9ff-43b6-81d5-2e58090e2e65">
 
-LLM Scraper is a TypeScript library that allows you to convert **any** webpages into structured data using LLMs.
+LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
 > [!TIP]
 > Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction)
@@ -14,7 +14,8 @@ LLM Scraper is a TypeScript library that allows you to convert **any** webpages 
 - Full type-safety with TypeScript
 - Based on Playwright framework
 - Streaming objects
-- Supports 4 input modes:
+- **NEW** Code-generation
+- Supports 4 formatting modes:
   - `html` for loading raw HTML
   - `markdown` for loading markdown
   - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
@@ -137,20 +138,32 @@ await page.close()
 await browser.close()
 ```
 
-### Streaming
+## Streaming
 
 Replace your `run` function with `stream` to get a partial object stream (Vercel AI SDK only).
 
 ```ts
-// Run the scraper
-const { stream } = await scraper.stream(page, schema, {
-  format: 'html',
-})
+// Run the scraper in streaming mode
+const { stream } = await scraper.stream(page, schema)
 
 // Stream the result from LLM
 for await (const data of stream) {
   console.log(data.top)
 }
+```
+
+## NEW: Code-generation
+
+Using the `generate` function you can generate re-usable playwright script that scrapes the contents according to a schema.
+
+```ts
+// Generate code and run it on the page
+const { code } = await scraper.generate(page, schema)
+const result = await page.evaluate(code)
+const data = schema.parse(result)
+
+// Show the parsed result
+console.log(data.news)
 ```
 
 ## Contributing

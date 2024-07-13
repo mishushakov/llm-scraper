@@ -35,7 +35,6 @@ export default function cleanup() {
   const attributesToRemove = [
     'style',
     'src',
-    'href',
     'alt',
     'title',
     'role',

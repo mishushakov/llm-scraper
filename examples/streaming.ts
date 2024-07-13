@@ -31,7 +31,7 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// Run the scraper
+// Run the scraper in streaming mode
 const { stream } = await scraper.stream(page, schema, {
   format: 'html',
 })

@@ -7,6 +7,7 @@ import {
   generateLlamaCompletions,
   generateAISDKCompletions,
   streamAISDKCompletions,
+  generateAISDKCode,
 } from './models.js'
 
 import cleanup from './cleanup.js'
@@ -107,7 +108,7 @@ export default class LLMScraper {
   private async generateCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
     schema: T,
-    options: ScraperRunOptions
+    options?: ScraperRunOptions
   ) {
     switch (this.client.constructor) {
       default:
@@ -126,7 +127,7 @@ export default class LLMScraper {
   private async streamCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
     schema: T,
-    options: ScraperRunOptions
+    options?: ScraperRunOptions
   ) {
     switch (this.client.constructor) {
       default:
@@ -137,7 +138,25 @@ export default class LLMScraper {
           options
         )
       case LlamaModel:
-        throw new Error('Streaming not supported for local models yet')
+        throw new Error('Streaming not supported with GGUF models')
+    }
+  }
+
+  private async generateCode<T extends z.ZodSchema<any>>(
+    page: ScraperLoadResult,
+    schema: T,
+    options?: ScraperLLMOptions
+  ) {
+    switch (this.client.constructor) {
+      default:
+        return generateAISDKCode<T>(
+          this.client as LanguageModelV1,
+          page,
+          schema,
+          options
+        )
+      case LlamaModel:
+        throw new Error('Code-generation not supported with GGUF models')
     }
   }
 
@@ -145,19 +164,28 @@ export default class LLMScraper {
   async run<T extends z.ZodSchema<any>>(
     page: Page,
     schema: T,
-    options: ScraperRunOptions
+    options?: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
     return this.generateCompletions<T>(preprocessed, schema, options)
   }
 
-  // Pre-process the page and generate completion
+  // Pre-process the page and stream completion
   async stream<T extends z.ZodSchema<any>>(
     page: Page,
     schema: T,
-    options: ScraperRunOptions
+    options?: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
     return this.streamCompletions<T>(preprocessed, schema, options)
+  }
+
+  // Pre-process the page and generate code
+  async generate(page, schema: z.ZodSchema<any>, options?: ScraperLLMOptions) {
+    const preprocessed = await this.preprocess(page, {
+      ...options,
+      format: 'cleanup',
+    })
+    return this.generateCode(preprocessed, schema, options)
   }
 }
