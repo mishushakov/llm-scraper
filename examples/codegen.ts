@@ -27,15 +27,15 @@ const schema = z.object({
   ),
 })
 
-// Run the scraper
+// Generate code and run it on the page
 const { code } = await scraper.generate(page, schema)
 console.log('code', code)
 
 const result = await page.evaluate(code)
-const validated = schema.parse(result)
+const data = schema.parse(result)
 
-// Show the result from LLM
-console.log('result', validated.news)
+// Show the parsed result
+console.log('result', data)
 
 await page.close()
 await browser.close()
