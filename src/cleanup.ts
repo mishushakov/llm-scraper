@@ -53,7 +53,7 @@ export default function cleanup() {
     }
 
     Array.from(element.attributes).forEach((attr) => {
-      if (attributesToRemove.some((a) => new RegExp(a).test(attr.name))) {
+      if (attributesToRemove.some((a) => attr.name.startsWith(a))) {
         element.removeAttribute(attr.name)
       }
     })
