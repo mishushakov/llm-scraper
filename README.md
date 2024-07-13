@@ -4,8 +4,11 @@
 
 LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
+> [!IMPORTANT]
+> [Code-generation](#code-generation) is now supported in LLM Scraper.
+
 > [!TIP]
-> Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction)
+> Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction).
 
 ### Features
 
@@ -14,7 +17,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 - Full type-safety with TypeScript
 - Based on Playwright framework
 - Streaming objects
-- **NEW** Code-generation
+- **NEW** [Code-generation](#code-generation)
 - Supports 4 formatting modes:
   - `html` for loading raw HTML
   - `markdown` for loading markdown
@@ -152,7 +155,7 @@ for await (const data of stream) {
 }
 ```
 
-## NEW: Code-generation
+## Code-generation
 
 Using the `generate` function you can generate re-usable playwright script that scrapes the contents according to a schema.
 
