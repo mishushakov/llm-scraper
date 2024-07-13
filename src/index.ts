@@ -33,6 +33,7 @@ export type ScraperLLMOptions = {
   temperature?: number
   maxTokens?: number
   topP?: number
+  mode?: 'auto' | 'json' | 'tool' | 'grammar'
 }
 
 export type ScraperRunOptions = ScraperLLMOptions & ScraperLoadOptions

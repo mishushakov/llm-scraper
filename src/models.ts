@@ -53,6 +53,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     topP: options.topP,
+    mode: options.mode,
   })
 
   return {
