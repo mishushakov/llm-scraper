@@ -46,6 +46,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 
    ```js
    import { openai } from '@ai-sdk/openai'
+
    const llm = openai.chat('gpt-4o')
    ```
 
@@ -81,6 +82,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 
    ```js
    import { LlamaModel } from 'node-llama-cpp'
+
    const llm = new LlamaModel({ modelPath: 'model.gguf' })
    ```
 
@@ -88,6 +90,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 
    ```js
    import LLMScraper from 'llm-scraper'
+
    const scraper = new LLMScraper(llm)
    ```
 
