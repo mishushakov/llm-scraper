@@ -14,16 +14,16 @@ import cleanup from './cleanup.js'
 
 export type ScraperLoadOptions =
   | {
-      format?: 'html' | 'text' | 'markdown' | 'cleanup'
-    }
+    format?: 'html' | 'text' | 'markdown' | 'cleanup'
+  }
   | {
-      format: 'custom'
-      formatFunction: (page: Page) => Promise<string> | string
-    }
+    format: 'custom'
+    formatFunction: (page: Page) => Promise<string> | string
+  }
   | {
-      format: 'image'
-      fullPage?: boolean
-    }
+    format: 'image'
+    fullPage?: boolean
+  }
 
 export type ScraperLoadResult = {
   url: string
@@ -65,14 +65,12 @@ export default class LLMScraper {
 
     if (options.format === 'text') {
       const readable = await page.evaluate(async () => {
-        const readability = await import(
-          // @ts-ignore
+        const { Readability } = await import(
           'https://cdn.skypack.dev/@mozilla/readability'
         )
 
-        return new readability.Readability(document).parse()
+        return new Readability(document).parse()
       })
-
       content = `Page Title: ${readable.title}\n${readable.textContent}`
     }
 

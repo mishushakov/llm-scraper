@@ -2,10 +2,16 @@
   "compilerOptions": {
     "outDir": "dist",
     "declaration": true,
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "module": "NodeNext",
     "target": "ESNext",
     "moduleResolution": "NodeNext"
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "types/**/*.d.ts"
+  ]
 }
