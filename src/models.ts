@@ -54,10 +54,11 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
     topP: options?.topP,
     mode: options?.mode,
   })
-
+	const { object, ...rest } = result
   return {
     data: result.object,
     url: page.url,
+    ...rest
   }
 }
 
@@ -108,11 +109,12 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
     maxTokens: options?.maxTokens,
     topP: options?.topP,
   })
-
-  return {
-    code: result.text,
-    url: page.url,
-  }
+  const { text, ...rest } = result
+	return {
+		code: result.text,
+		url: page.url,
+		...rest,
+	}
 }
 
 export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
