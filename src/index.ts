@@ -26,9 +26,9 @@ export default class LLMScraper {
   }
 
   // Pre-process the page and generate completion
-  async run<T extends z.ZodSchema<any>>(
+  async run<T>(
     page: Page,
-    schema: T | Schema,
+    schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
@@ -41,9 +41,9 @@ export default class LLMScraper {
   }
 
   // Pre-process the page and stream completion
-  async stream<T extends z.ZodSchema<any>>(
+  async stream<T>(
     page: Page,
-    schema: T | Schema,
+    schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
@@ -51,9 +51,9 @@ export default class LLMScraper {
   }
 
   // Pre-process the page and generate code
-  async generate<T extends z.ZodSchema<any>>(
+  async generate<T>(
     page: Page,
-    schema: T | Schema,
+    schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
     options?: ScraperLLMOptions
   ) {
     const preprocessed = await preprocess(page, {

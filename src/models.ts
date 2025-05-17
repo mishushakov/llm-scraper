@@ -43,14 +43,14 @@ function prepareAISDKPage(page: PreProcessResult): UserContent {
   return [{ type: 'text', text: page.content }]
 }
 
-export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
+export async function generateAISDKCompletions<T>(
   model: LanguageModelV1,
   page: PreProcessResult,
-  schema: T | Schema,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
-  const result = await generateObject<z.infer<T>>({
+  const result = await generateObject<T>({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
@@ -70,14 +70,14 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   }
 }
 
-export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
+export async function streamAISDKCompletions<T>(
   model: LanguageModelV1,
   page: PreProcessResult,
-  schema: T | Schema,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
-  const { partialObjectStream } = await streamObject<z.infer<T>>({
+  const { partialObjectStream } = await streamObject<T>({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
@@ -96,14 +96,13 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   }
 }
 
-export async function generateAISDKCode<T extends z.ZodSchema<any>>(
+export async function generateAISDKCode<T>(
   model: LanguageModelV1,
   page: PreProcessResult,
-  schema: T | Schema,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
-  const parsedSchema =
-    schema instanceof z.ZodSchema ? zodToJsonSchema(schema) : schema
+  const parsedSchema = schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
 
   const result = await generateText({
     model,
