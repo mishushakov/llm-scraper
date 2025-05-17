@@ -14,21 +14,27 @@ const scraper = new LLMScraper(llm)
 
 // Open new page
 const page = await browser.newPage()
-await page.goto('https://www.bbc.com')
+await page.goto('https://news.ycombinator.com')
 
 // Define schema to extract contents into
 const schema = z.object({
-  news: z.array(
-    z.object({
-      title: z.string(),
-      description: z.string(),
-      url: z.string(),
-    })
-  ),
+  top: z
+    .array(
+      z.object({
+        title: z.string(),
+        points: z.number(),
+        by: z.string(),
+        commentsURL: z.string(),
+      })
+    )
+    .length(5)
+    .describe('Top 5 stories on Hacker News'),
 })
 
 // Generate code and run it on the page
-const { code } = await scraper.generate(page, schema)
+const { code } = await scraper.generate(page, schema, {
+  format: 'raw_html',
+})
 console.log('code', code)
 
 const result = await page.evaluate(code)
