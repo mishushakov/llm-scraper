@@ -24,7 +24,8 @@ test('scrapes top 3 stories from Hacker News', async ({ page, scraper }) => {
     required: ['top'],
   }
 
-  const { data } = await scraper.run(page, jsonSchema(schema), {
+  const m = jsonSchema<{ top: { title: string }[] }>(schema)
+  const { data } = await scraper.run(page, m, {
     format: 'html',
   })
 
