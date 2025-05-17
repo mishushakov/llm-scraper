@@ -36,6 +36,7 @@ export type ScraperLLMOptions = {
   maxTokens?: number
   topP?: number
   mode?: 'auto' | 'json' | 'tool'
+  output?: 'array'
 }
 
 export type ScraperRunOptions = ScraperLLMOptions & ScraperLoadOptions

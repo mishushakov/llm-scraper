@@ -7,7 +7,7 @@ import LLMScraper from './../src'
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = ollama('llama3')
+const llm = ollama('gemma3:1b')
 
 // Initialize a new LLMScraper with local model
 const scraper = new LLMScraper(llm)

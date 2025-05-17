@@ -18,27 +18,21 @@ await page.goto('https://news.ycombinator.com')
 
 // Define schema to extract contents into
 const schema = z.object({
-  top: z
-    .array(
-      z.object({
-        title: z.string(),
-        points: z.number(),
-        by: z.string(),
-        commentsURL: z.string(),
-      })
-    )
-    .length(5)
-    .describe('Top 5 stories on Hacker News'),
+  title: z.string(),
+  points: z.number(),
+  by: z.string(),
+  commentsURL: z.string(),
 })
 
 // Run the scraper in streaming mode
 const { stream } = await scraper.stream(page, schema, {
   format: 'html',
+  output: 'array',
 })
 
 // Stream the result from LLM
 for await (const data of stream) {
-  console.log(data.top)
+  console.log(data)
 }
 
 await page.close()

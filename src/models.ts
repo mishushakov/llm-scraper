@@ -52,6 +52,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
     maxTokens: options?.maxTokens,
     topP: options?.topP,
     mode: options?.mode,
+    output: options?.output,
   })
 
   return {
@@ -74,6 +75,7 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
       { role: 'user', content },
     ],
     schema,
+    output: options?.output,
     temperature: options?.temperature,
     maxTokens: options?.maxTokens,
     topP: options?.topP,
