@@ -15,12 +15,10 @@ test('scrapes top 3 stories from Hacker News', async ({ page, scraper }) => {
       .describe('Top 3 stories on Hacker News'),
   })
 
-  // Generate scraping code
-  const { code } = await scraper.generate(page, schema)
+  const { data } = await scraper.run(page, schema, {
+    format: 'image',
+  })
 
-  // Evaluate the generated code in the page context
-  const result: z.infer<typeof schema> = await page.evaluate(code)
-
-  // Validate the result
-  expect(schema.safeParse(result).success).toBe(true)
+  // check schema
+  expect(schema.safeParse(data).success).toBe(true)
 })
