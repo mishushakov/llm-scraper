@@ -54,7 +54,7 @@ export default class LLMScraper {
     const url = page.url()
     let content
 
-    if (options.format === 'html') {
+    if (options.format === 'raw') {
       content = await page.content()
     }
 
