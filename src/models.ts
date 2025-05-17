@@ -21,6 +21,14 @@ const defaultPrompt =
 const defaultCodePrompt = `Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page.
 The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code.`
 
+function stripMarkdownBackticks(text: string) {
+  const match = text.match(/^```(.*)\n(.*)/)
+  if (match) {
+    return match[2]
+  }
+  return text
+}
+
 function prepareAISDKPage(page: ScraperLoadResult): UserContent {
   if (page.format === 'image') {
     return [
@@ -104,7 +112,7 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
         role: 'user',
         content: `Website: ${page.url}
         Schema: ${JSON.stringify(parsedSchema)}
-        Content: ${page.content}`,
+        Content: ${stripMarkdownBackticks(page.content)}`,
       },
     ],
     temperature: options?.temperature,
@@ -113,7 +121,7 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
   })
 
   return {
-    code: result.text,
+    code: stripMarkdownBackticks(result.text),
     url: page.url,
   }
 }

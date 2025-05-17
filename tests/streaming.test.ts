@@ -14,8 +14,8 @@ test('streaming', async ({ page, scraper }) => {
     .describe('Top 5 stories on Hacker News')
 
   const { stream } = await scraper.stream(page, schema, {
-    format: 'html',
     output: 'array',
+    format: 'html',
   })
 
   let last: Partial<z.infer<typeof schema>>[] = []

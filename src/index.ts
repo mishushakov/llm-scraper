@@ -13,7 +13,7 @@ import cleanup from './cleanup.js'
 
 export type ScraperLoadOptions =
   | {
-      format?: 'html' | 'text' | 'markdown' | 'cleanup'
+      format?: 'html' | 'text' | 'markdown' | 'raw'
     }
   | {
       format: 'custom'
@@ -76,7 +76,7 @@ export default class LLMScraper {
       content = `Page Title: ${readable.title}\n${readable.textContent}`
     }
 
-    if (options.format === 'cleanup') {
+    if (options.format === 'html') {
       await page.evaluate(cleanup)
       content = await page.content()
     }
@@ -157,8 +157,8 @@ export default class LLMScraper {
     options?: ScraperLLMOptions
   ) {
     const preprocessed = await this.preprocess(page, {
+      format: 'html',
       ...options,
-      format: 'cleanup',
     })
     return this.generateCode(preprocessed, schema, options)
   }

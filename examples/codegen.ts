@@ -7,7 +7,7 @@ import LLMScraper from './../src'
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = openai('gpt-4o')
+const llm = openai('gpt-4o-mini')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(llm)
