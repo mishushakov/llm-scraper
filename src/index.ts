@@ -18,6 +18,11 @@ export type ScraperLLMOptions = {
   output?: 'array'
 }
 
+export type ScraperGenerateOptions = Omit<
+  ScraperLLMOptions,
+  'output' | 'mode'
+>
+
 export type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
 export default class LLMScraper {
@@ -54,7 +59,7 @@ export default class LLMScraper {
   async generate<T>(
     page: Page,
     schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
-    options?: ScraperLLMOptions
+    options?: ScraperGenerateOptions
   ) {
     const preprocessed = await preprocess(page, {
       format: 'raw_html',

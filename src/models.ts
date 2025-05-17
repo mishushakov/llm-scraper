@@ -7,7 +7,7 @@ import {
   Schema,
 } from 'ai'
 import { z } from 'zod'
-import { ScraperLLMOptions } from './index.js'
+import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
@@ -96,7 +96,7 @@ export async function generateAISDKCode<T>(
   model: LanguageModelV1,
   page: PreProcessResult,
   schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
-  options?: ScraperLLMOptions
+  options?: ScraperGenerateOptions
 ) {
   const parsedSchema =
     schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
