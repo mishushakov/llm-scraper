@@ -5,7 +5,8 @@
 LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
 > [!IMPORTANT]
-> LLM Scraper was updated to version 1.6.
+> **LLM Scraper was updated to version 1.6.**
+>
 > The new version comes with Vercel AI SDK 4 support, JSON Schema, better type-safety, improved code generation and updated examples.
 
 > [!TIP]
