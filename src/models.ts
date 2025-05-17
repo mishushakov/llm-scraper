@@ -15,14 +15,13 @@ const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
 const defaultCodePrompt =
-  "Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page. The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
+  "Provide a scraping function in JavaScript that extracts and returns data according to a schema from the current page. The function must be IIFE. No comments or imports. No console.log. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
 
 function stripMarkdownBackticks(text: string) {
-  const match = text.match(/^```(.*)\n(.*)/)
-  if (match) {
-    return match[2]
-  }
-  return text
+  let trimmed = text.trim()
+  trimmed = trimmed.replace(/^```(?:javascript)?\s*/i, '')
+  trimmed = trimmed.replace(/\s*```$/i, '')
+  return trimmed
 }
 
 function prepareAISDKPage(page: PreProcessResult): UserContent {
@@ -109,7 +108,7 @@ export async function generateAISDKCode<T>(
         role: 'user',
         content: `Website: ${page.url}
         Schema: ${JSON.stringify(parsedSchema)}
-        Content: ${stripMarkdownBackticks(page.content)}`,
+        Content: ${page.content}`,
       },
     ],
     temperature: options?.temperature,

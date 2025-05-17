@@ -21,7 +21,9 @@ export type ScraperLLMOptions = {
 export type ScraperGenerateOptions = Omit<
   ScraperLLMOptions,
   'output' | 'mode'
->
+> & {
+  format?: 'html'| 'raw_html'
+}
 
 export type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
@@ -61,10 +63,7 @@ export default class LLMScraper {
     schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
     options?: ScraperGenerateOptions
   ) {
-    const preprocessed = await preprocess(page, {
-      format: 'raw_html',
-      ...options,
-    })
+    const preprocessed = await preprocess(page, options)
     return generateAISDKCode<T>(this.client, preprocessed, schema, options)
   }
 }
