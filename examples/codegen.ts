@@ -1,34 +1,40 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import { anthropic } from '@ai-sdk/anthropic'
+import { openai } from '@ai-sdk/openai'
 import LLMScraper from './../src'
 
 // Launch a browser instance
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = anthropic('claude-3-5-sonnet-20240620')
+const llm = openai('gpt-4o-mini')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(llm)
 
 // Open new page
 const page = await browser.newPage()
-await page.goto('https://www.bbc.com')
+await page.goto('https://news.ycombinator.com')
 
 // Define schema to extract contents into
 const schema = z.object({
-  news: z.array(
-    z.object({
-      title: z.string(),
-      description: z.string(),
-      url: z.string(),
-    })
-  ),
+  top: z
+    .array(
+      z.object({
+        title: z.string(),
+        points: z.number(),
+        by: z.string(),
+        commentsURL: z.string(),
+      })
+    )
+    .length(5)
+    .describe('Top 5 stories on Hacker News'),
 })
 
 // Generate code and run it on the page
-const { code } = await scraper.generate(page, schema)
+const { code } = await scraper.generate(page, schema, {
+  format: 'raw_html',
+})
 console.log('code', code)
 
 const result = await page.evaluate(code)

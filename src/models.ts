@@ -1,28 +1,30 @@
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { generateObject, generateText, streamObject, UserContent } from 'ai'
-import { z } from 'zod'
-import { ScraperLoadResult, ScraperLLMOptions } from './index.js'
 import {
-  LlamaModel,
-  LlamaJsonSchemaGrammar,
-  LlamaContext,
-  LlamaChatSession,
-  GbnfJsonSchema,
-} from 'node-llama-cpp'
+  generateObject,
+  generateText,
+  streamObject,
+  UserContent,
+  Schema,
+} from 'ai'
+import { z } from 'zod'
+import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
+import { PreProcessResult } from './preprocess.js'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-
-export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
-  data: z.infer<T>
-  url: string
-}
 
 const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
-const defaultCodePrompt = `Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page.
-The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code.`
+const defaultCodePrompt =
+  "Provide a scraping function in JavaScript that extracts and returns data according to a schema from the current page. The function must be IIFE. No comments or imports. No console.log. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
 
-function prepareAISDKPage(page: ScraperLoadResult): UserContent {
+function stripMarkdownBackticks(text: string) {
+  let trimmed = text.trim()
+  trimmed = trimmed.replace(/^```(?:javascript)?\s*/i, '')
+  trimmed = trimmed.replace(/\s*```$/i, '')
+  return trimmed
+}
+
+function prepareAISDKPage(page: PreProcessResult): UserContent {
   if (page.format === 'image') {
     return [
       {
@@ -35,14 +37,14 @@ function prepareAISDKPage(page: ScraperLoadResult): UserContent {
   return [{ type: 'text', text: page.content }]
 }
 
-export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
+export async function generateAISDKCompletions<T>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
-  schema: T,
+  page: PreProcessResult,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
-  const result = await generateObject<z.infer<T>>({
+  const result = await generateObject<T>({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
@@ -53,6 +55,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
     maxTokens: options?.maxTokens,
     topP: options?.topP,
     mode: options?.mode,
+    output: options?.output,
   })
 
   return {
@@ -61,23 +64,25 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   }
 }
 
-export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
+export function streamAISDKCompletions<T>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
-  schema: T,
+  page: PreProcessResult,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
-  const { partialObjectStream } = await streamObject<z.infer<T>>({
+  const { partialObjectStream } = streamObject<T>({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
       { role: 'user', content },
     ],
     schema,
+    output: options?.output,
     temperature: options?.temperature,
     maxTokens: options?.maxTokens,
     topP: options?.topP,
+    mode: options?.mode,
   })
 
   return {
@@ -86,13 +91,15 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   }
 }
 
-export async function generateAISDKCode<T extends z.ZodSchema<any>>(
+export async function generateAISDKCode<T>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
-  schema: T,
-  options?: ScraperLLMOptions
+  page: PreProcessResult,
+  schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
+  options?: ScraperGenerateOptions
 ) {
-  const generatedSchema = zodToJsonSchema(schema)
+  const parsedSchema =
+    schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
+
   const result = await generateText({
     model,
     messages: [
@@ -100,7 +107,7 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
       {
         role: 'user',
         content: `Website: ${page.url}
-        Schema: ${JSON.stringify(generatedSchema)}
+        Schema: ${JSON.stringify(parsedSchema)}
         Content: ${page.content}`,
       },
     ],
@@ -110,33 +117,7 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
   })
 
   return {
-    code: result.text,
-    url: page.url,
-  }
-}
-
-export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
-  model: LlamaModel,
-  page: ScraperLoadResult,
-  schema: T,
-  options?: ScraperLLMOptions
-): Promise<ScraperCompletionResult<T>> {
-  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
-  const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
-  const context = new LlamaContext({ model })
-  const session = new LlamaChatSession({ context })
-  const pagePrompt = `${options?.prompt || defaultPrompt}\n${page.content}`
-
-  const result = await session.prompt(pagePrompt, {
-    grammar,
-    temperature: options?.temperature,
-    maxTokens: options?.maxTokens,
-    topP: options?.topP,
-  })
-
-  const parsed = grammar.parse(result)
-  return {
-    data: parsed,
+    code: stripMarkdownBackticks(result.text),
     url: page.url,
   }
 }
