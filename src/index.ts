@@ -57,7 +57,7 @@ export default class LLMScraper {
     options?: ScraperLLMOptions
   ) {
     const preprocessed = await preprocess(page, {
-      format: 'raw',
+      format: 'raw_html',
       ...options,
     })
     return generateAISDKCode<T>(this.client, preprocessed, schema, options)

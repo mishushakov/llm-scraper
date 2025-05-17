@@ -20,7 +20,7 @@ test('streaming', async ({ page, scraper }) => {
 
   let last: Partial<z.infer<typeof schema>>[] = []
   for await (const item of stream) {
-    last = item
+    last = item as typeof last
   }
 
   expect(last).toHaveLength(5)

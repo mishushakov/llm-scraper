@@ -5,7 +5,7 @@ import cleanup from './cleanup.js'
 
 export type PreProcessOptions =
   | {
-      format?: 'html' | 'text' | 'markdown' | 'raw'
+      format?: 'html' | 'text' | 'markdown' | 'raw_html'
     }
   | {
       format: 'custom'
@@ -29,7 +29,7 @@ export async function preprocess(
   const url = page.url()
   let content
 
-  if (options.format === 'raw') {
+  if (options.format === 'raw_html') {
     content = await page.content()
   }
 
