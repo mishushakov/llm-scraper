@@ -1,14 +1,13 @@
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { generateObject, generateText, streamObject, UserContent } from 'ai'
+import {
+  generateObject,
+  generateText,
+  streamObject,
+  UserContent,
+  Schema,
+} from 'ai'
 import { z } from 'zod'
 import { ScraperLoadResult, ScraperLLMOptions } from './index.js'
-import {
-  LlamaModel,
-  LlamaJsonSchemaGrammar,
-  LlamaContext,
-  LlamaChatSession,
-  GbnfJsonSchema,
-} from 'node-llama-cpp'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
@@ -38,7 +37,7 @@ function prepareAISDKPage(page: ScraperLoadResult): UserContent {
 export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: T,
+  schema: T | Schema,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
@@ -64,7 +63,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
 export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: T,
+  schema: T | Schema,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
@@ -89,10 +88,12 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
 export async function generateAISDKCode<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
   page: ScraperLoadResult,
-  schema: T,
+  schema: T | Schema,
   options?: ScraperLLMOptions
 ) {
-  const generatedSchema = zodToJsonSchema(schema)
+  const parsedSchema =
+    schema instanceof z.ZodSchema ? zodToJsonSchema(schema) : schema
+
   const result = await generateText({
     model,
     messages: [
@@ -100,7 +101,7 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
       {
         role: 'user',
         content: `Website: ${page.url}
-        Schema: ${JSON.stringify(generatedSchema)}
+        Schema: ${JSON.stringify(parsedSchema)}
         Content: ${page.content}`,
       },
     ],
@@ -111,32 +112,6 @@ export async function generateAISDKCode<T extends z.ZodSchema<any>>(
 
   return {
     code: result.text,
-    url: page.url,
-  }
-}
-
-export async function generateLlamaCompletions<T extends z.ZodSchema<any>>(
-  model: LlamaModel,
-  page: ScraperLoadResult,
-  schema: T,
-  options?: ScraperLLMOptions
-): Promise<ScraperCompletionResult<T>> {
-  const generatedSchema = zodToJsonSchema(schema) as GbnfJsonSchema
-  const grammar = new LlamaJsonSchemaGrammar(generatedSchema) as any // any, because it has type inference going wild
-  const context = new LlamaContext({ model })
-  const session = new LlamaChatSession({ context })
-  const pagePrompt = `${options?.prompt || defaultPrompt}\n${page.content}`
-
-  const result = await session.prompt(pagePrompt, {
-    grammar,
-    temperature: options?.temperature,
-    maxTokens: options?.maxTokens,
-    topP: options?.topP,
-  })
-
-  const parsed = grammar.parse(result)
-  return {
-    data: parsed,
     url: page.url,
   }
 }

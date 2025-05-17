@@ -1,10 +1,9 @@
-import { Page } from 'playwright'
+import { type Page } from 'playwright'
 import Turndown from 'turndown'
 import { LanguageModelV1 } from '@ai-sdk/provider'
-import { LlamaModel } from 'node-llama-cpp'
 import { z } from 'zod'
+import { Schema } from 'ai'
 import {
-  generateLlamaCompletions,
   generateAISDKCompletions,
   streamAISDKCompletions,
   generateAISDKCode,
@@ -36,13 +35,13 @@ export type ScraperLLMOptions = {
   temperature?: number
   maxTokens?: number
   topP?: number
-  mode?: 'auto' | 'json' | 'tool' | 'grammar'
+  mode?: 'auto' | 'json' | 'tool'
 }
 
 export type ScraperRunOptions = ScraperLLMOptions & ScraperLoadOptions
 
 export default class LLMScraper {
-  constructor(private client: LanguageModelV1 | LlamaModel) {
+  constructor(private client: LanguageModelV1) {
     this.client = client
   }
 
@@ -107,63 +106,33 @@ export default class LLMScraper {
   // Generate completion using AI SDK
   private async generateCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
-    schema: T,
+    schema: T | Schema,
     options?: ScraperRunOptions
   ) {
-    switch (this.client.constructor) {
-      default:
-        return generateAISDKCompletions<T>(
-          this.client as LanguageModelV1,
-          page,
-          schema,
-          options
-        )
-      case LlamaModel:
-        return generateLlamaCompletions<T>(this.client, page, schema, options)
-    }
+    return generateAISDKCompletions<T>(this.client, page, schema, options)
   }
 
   // Stream completions using AI SDK
   private async streamCompletions<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
-    schema: T,
+    schema: T | Schema,
     options?: ScraperRunOptions
   ) {
-    switch (this.client.constructor) {
-      default:
-        return streamAISDKCompletions<T>(
-          this.client as LanguageModelV1,
-          page,
-          schema,
-          options
-        )
-      case LlamaModel:
-        throw new Error('Streaming not supported with GGUF models')
-    }
+    return streamAISDKCompletions<T>(this.client, page, schema, options)
   }
 
   private async generateCode<T extends z.ZodSchema<any>>(
     page: ScraperLoadResult,
-    schema: T,
+    schema: T | Schema,
     options?: ScraperLLMOptions
   ) {
-    switch (this.client.constructor) {
-      default:
-        return generateAISDKCode<T>(
-          this.client as LanguageModelV1,
-          page,
-          schema,
-          options
-        )
-      case LlamaModel:
-        throw new Error('Code-generation not supported with GGUF models')
-    }
+    return generateAISDKCode<T>(this.client, page, schema, options)
   }
 
   // Pre-process the page and generate completion
   async run<T extends z.ZodSchema<any>>(
     page: Page,
-    schema: T,
+    schema: T | Schema,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
@@ -173,7 +142,7 @@ export default class LLMScraper {
   // Pre-process the page and stream completion
   async stream<T extends z.ZodSchema<any>>(
     page: Page,
-    schema: T,
+    schema: T | Schema,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await this.preprocess(page, options)
@@ -181,7 +150,11 @@ export default class LLMScraper {
   }
 
   // Pre-process the page and generate code
-  async generate(page, schema: z.ZodSchema<any>, options?: ScraperLLMOptions) {
+  async generate(
+    page,
+    schema: z.ZodSchema<any> | Schema,
+    options?: ScraperLLMOptions
+  ) {
     const preprocessed = await this.preprocess(page, {
       ...options,
       format: 'cleanup',

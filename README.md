@@ -12,7 +12,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 
 ### Features
 
-- Supports **Local (Ollama, GGUF)**, OpenAI, Vercel AI SDK Providers
+- Supports **Local (Ollama)**, OpenAI, Vercel AI SDK Providers
 - Schemas defined with Zod
 - Full type-safety with TypeScript
 - Based on Playwright framework
@@ -50,6 +50,18 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    const llm = openai.chat('gpt-4o')
    ```
 
+   **Anthropic**
+
+   ```
+   npm i @ai-sdk/anthropic
+   ```
+
+   ```js
+   import { anthropic } from '@ai-sdk/anthropic'
+
+   const llm = anthropic('claude-3-5-sonnet-20240620')
+   ```
+
    **Groq**
 
    ```
@@ -76,14 +88,6 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    import { ollama } from 'ollama-ai-provider'
 
    const llm = ollama('llama3')
-   ```
-
-   **GGUF**
-
-   ```js
-   import { LlamaModel } from 'node-llama-cpp'
-
-   const llm = new LlamaModel({ modelPath: 'model.gguf' })
    ```
 
 3. Create a new scraper instance provided with the llm:
