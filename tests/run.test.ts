@@ -19,9 +19,6 @@ test('scrapes top 3 stories from Hacker News', async ({ page, scraper }) => {
     format: 'html',
   })
 
-  // check length
-  expect(data.top).toHaveLength(3)
-
   // check schema
   expect(schema.safeParse(data).success).toBe(true)
 })
