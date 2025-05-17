@@ -11,16 +11,11 @@ import { ScraperLLMOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
-  data: z.infer<T>
-  url: string
-}
-
 const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
-const defaultCodePrompt = `Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page.
-The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code.`
+const defaultCodePrompt =
+  "Provide a scraping function in JavaScript that extracts and formats data according to a schema from the current page. The function must be IIFE. No comments or imports. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
 
 function stripMarkdownBackticks(text: string) {
   const match = text.match(/^```(.*)\n(.*)/)
@@ -70,14 +65,14 @@ export async function generateAISDKCompletions<T>(
   }
 }
 
-export async function streamAISDKCompletions<T>(
+export function streamAISDKCompletions<T>(
   model: LanguageModelV1,
   page: PreProcessResult,
   schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
-  const { partialObjectStream } = await streamObject<T>({
+  const { partialObjectStream } = streamObject<T>({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
@@ -88,6 +83,7 @@ export async function streamAISDKCompletions<T>(
     temperature: options?.temperature,
     maxTokens: options?.maxTokens,
     topP: options?.topP,
+    mode: options?.mode,
   })
 
   return {
@@ -102,7 +98,8 @@ export async function generateAISDKCode<T>(
   schema: z.Schema<T, z.ZodTypeDef, any> | Schema<T>,
   options?: ScraperLLMOptions
 ) {
-  const parsedSchema = schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
+  const parsedSchema =
+    schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
 
   const result = await generateText({
     model,

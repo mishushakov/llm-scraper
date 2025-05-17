@@ -24,4 +24,4 @@ test('streaming', async ({ page, scraper }) => {
   }
 
   expect(last).toHaveLength(5)
-}, 10000)
+})
