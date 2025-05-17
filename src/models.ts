@@ -7,7 +7,8 @@ import {
   Schema,
 } from 'ai'
 import { z } from 'zod'
-import { ScraperLoadResult, ScraperLLMOptions } from './index.js'
+import { ScraperLLMOptions } from './index.js'
+import { PreProcessResult } from './preprocess.js'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export type ScraperCompletionResult<T extends z.ZodSchema<any>> = {
@@ -29,7 +30,7 @@ function stripMarkdownBackticks(text: string) {
   return text
 }
 
-function prepareAISDKPage(page: ScraperLoadResult): UserContent {
+function prepareAISDKPage(page: PreProcessResult): UserContent {
   if (page.format === 'image') {
     return [
       {
@@ -44,7 +45,7 @@ function prepareAISDKPage(page: ScraperLoadResult): UserContent {
 
 export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
+  page: PreProcessResult,
   schema: T | Schema,
   options?: ScraperLLMOptions
 ) {
@@ -71,7 +72,7 @@ export async function generateAISDKCompletions<T extends z.ZodSchema<any>>(
 
 export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
+  page: PreProcessResult,
   schema: T | Schema,
   options?: ScraperLLMOptions
 ) {
@@ -97,7 +98,7 @@ export async function streamAISDKCompletions<T extends z.ZodSchema<any>>(
 
 export async function generateAISDKCode<T extends z.ZodSchema<any>>(
   model: LanguageModelV1,
-  page: ScraperLoadResult,
+  page: PreProcessResult,
   schema: T | Schema,
   options?: ScraperLLMOptions
 ) {

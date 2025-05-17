@@ -1,5 +1,4 @@
 import { type Page } from 'playwright'
-import Turndown from 'turndown'
 import { LanguageModelV1 } from '@ai-sdk/provider'
 import { z } from 'zod'
 import { Schema } from 'ai'
@@ -8,27 +7,11 @@ import {
   streamAISDKCompletions,
   generateAISDKCode,
 } from './models.js'
-
-import cleanup from './cleanup.js'
-
-export type ScraperLoadOptions =
-  | {
-      format?: 'html' | 'text' | 'markdown' | 'raw'
-    }
-  | {
-      format: 'custom'
-      formatFunction: (page: Page) => Promise<string> | string
-    }
-  | {
-      format: 'image'
-      fullPage?: boolean
-    }
-
-export type ScraperLoadResult = {
-  url: string
-  content: string
-  format: ScraperLoadOptions['format']
-}
+import {
+  preprocess,
+  PreProcessOptions,
+  PreProcessResult,
+} from './preprocess.js'
 
 export type ScraperLLMOptions = {
   prompt?: string
@@ -39,74 +22,16 @@ export type ScraperLLMOptions = {
   output?: 'array'
 }
 
-export type ScraperRunOptions = ScraperLLMOptions & ScraperLoadOptions
+export type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
 export default class LLMScraper {
   constructor(private client: LanguageModelV1) {
     this.client = client
   }
 
-  // Pre-process a page
-  private async preprocess(
-    page: Page,
-    options: ScraperLoadOptions = { format: 'html' }
-  ): Promise<ScraperLoadResult> {
-    const url = page.url()
-    let content
-
-    if (options.format === 'raw') {
-      content = await page.content()
-    }
-
-    if (options.format === 'markdown') {
-      const body = await page.innerHTML('body')
-      content = new Turndown().turndown(body)
-    }
-
-    if (options.format === 'text') {
-      const readable = await page.evaluate(async () => {
-        const readability = await import(
-          // @ts-ignore
-          'https://cdn.skypack.dev/@mozilla/readability'
-        )
-
-        return new readability.Readability(document).parse()
-      })
-
-      content = `Page Title: ${readable.title}\n${readable.textContent}`
-    }
-
-    if (options.format === 'html') {
-      await page.evaluate(cleanup)
-      content = await page.content()
-    }
-
-    if (options.format === 'image') {
-      const image = await page.screenshot({ fullPage: options.fullPage })
-      content = image.toString('base64')
-    }
-
-    if (options.format === 'custom') {
-      if (
-        !options.formatFunction ||
-        typeof options.formatFunction !== 'function'
-      ) {
-        throw new Error('customPreprocessor must be provided in custom mode')
-      }
-
-      content = await options.formatFunction(page)
-    }
-
-    return {
-      url,
-      content,
-      format: options.format,
-    }
-  }
-
   // Generate completion using AI SDK
   private async generateCompletions<T extends z.ZodSchema<any>>(
-    page: ScraperLoadResult,
+    page: PreProcessResult,
     schema: T | Schema,
     options?: ScraperRunOptions
   ) {
@@ -115,7 +40,7 @@ export default class LLMScraper {
 
   // Stream completions using AI SDK
   private async streamCompletions<T extends z.ZodSchema<any>>(
-    page: ScraperLoadResult,
+    page: PreProcessResult,
     schema: T | Schema,
     options?: ScraperRunOptions
   ) {
@@ -123,7 +48,7 @@ export default class LLMScraper {
   }
 
   private async generateCode<T extends z.ZodSchema<any>>(
-    page: ScraperLoadResult,
+    page: PreProcessResult,
     schema: T | Schema,
     options?: ScraperLLMOptions
   ) {
@@ -136,7 +61,7 @@ export default class LLMScraper {
     schema: T | Schema,
     options?: ScraperRunOptions
   ) {
-    const preprocessed = await this.preprocess(page, options)
+    const preprocessed = await preprocess(page, options)
     return this.generateCompletions<T>(preprocessed, schema, options)
   }
 
@@ -146,17 +71,17 @@ export default class LLMScraper {
     schema: T | Schema,
     options?: ScraperRunOptions
   ) {
-    const preprocessed = await this.preprocess(page, options)
+    const preprocessed = await preprocess(page, options)
     return this.streamCompletions<T>(preprocessed, schema, options)
   }
 
   // Pre-process the page and generate code
   async generate(
-    page,
+    page: Page,
     schema: z.ZodSchema<any> | Schema,
     options?: ScraperLLMOptions
   ) {
-    const preprocessed = await this.preprocess(page, {
+    const preprocessed = await preprocess(page, {
       format: 'html',
       ...options,
     })
