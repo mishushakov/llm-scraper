@@ -5,21 +5,23 @@
 LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
 > [!IMPORTANT]
-> [Code-generation](#code-generation) is now supported in LLM Scraper.
+> LLM Scraper was updated to version 1.6.
+> The new version comes with Vercel AI SDK 4 support, JSON Schema, better type-safety and code generation, and updated examples.
 
 > [!TIP]
 > Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction).
 
 ### Features
 
-- Supports **Local (Ollama)**, OpenAI, Vercel AI SDK Providers
-- Schemas defined with Zod
+- Supports GPT, Sonnet, Gemini, Llama, Qwen model series
+- Schemas defined with Zod or JSON Schema
 - Full type-safety with TypeScript
 - Based on Playwright framework
 - Streaming objects
-- **NEW** [Code-generation](#code-generation)
+- [Code-generation](#code-generation)
 - Supports 4 formatting modes:
   - `html` for loading raw HTML
+  - `raw_html` for loading raw HTML (no processing)
   - `markdown` for loading markdown
   - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
   - `image` for loading a screenshot (multi-modal only)
@@ -60,6 +62,18 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    import { anthropic } from '@ai-sdk/anthropic'
 
    const llm = anthropic('claude-3-5-sonnet-20240620')
+   ```
+
+   **Google**
+
+   ```
+   npm i @ai-sdk/google
+   ```
+
+   ```js
+   import { google } from '@ai-sdk/google'
+
+   const llm = google('gemini-1.5-flash')
    ```
 
    **Groq**
@@ -147,6 +161,45 @@ console.log(data.top)
 await page.close()
 await browser.close()
 ```
+
+Output
+
+```js
+[
+  {
+    title: "Palette lighting tricks on the Nintendo 64",
+    points: 105,
+    by: "ibobev",
+    commentsURL: "https://news.ycombinator.com/item?id=44014587",
+  },
+  {
+    title: "Push Ifs Up and Fors Down",
+    points: 187,
+    by: "goranmoomin",
+    commentsURL: "https://news.ycombinator.com/item?id=44013157",
+  },
+  {
+    title: "JavaScript's New Superpower: Explicit Resource Management",
+    points: 225,
+    by: "olalonde",
+    commentsURL: "https://news.ycombinator.com/item?id=44012227",
+  },
+  {
+    title: "\"We would be less confidential than Google\" Proton threatens to quit Switzerland",
+    points: 65,
+    by: "taubek",
+    commentsURL: "https://news.ycombinator.com/item?id=44014808",
+  },
+  {
+    title: "OBNC – Oberon-07 Compiler",
+    points: 37,
+    by: "AlexeyBrin",
+    commentsURL: "https://news.ycombinator.com/item?id=44013671",
+  }
+]
+```
+
+More examples can be found in the [examples](./examples) folder.
 
 ## Streaming
 
