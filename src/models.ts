@@ -1,6 +1,10 @@
 import { LanguageModelV2, JSONValue } from '@ai-sdk/provider'
 import { generateObject, generateText, streamObject, UserContent } from 'ai'
-import { type FlexibleSchema, asSchema } from '@ai-sdk/provider-utils'
+import {
+  type FlexibleSchema,
+  InferSchema,
+  asSchema,
+} from '@ai-sdk/provider-utils'
 import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 
@@ -30,12 +34,17 @@ function prepareAISDKPage(page: PreProcessResult): UserContent {
 }
 
 export async function generateAISDKCompletions<
-  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>
+  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>,
+  OUTPUT extends
+    | 'object'
+    | 'array'
+    | 'enum'
+    | 'no-schema' = InferSchema<SCHEMA> extends string ? 'enum' : 'object'
 >(
   model: LanguageModelV2,
   page: PreProcessResult,
   schema: SCHEMA,
-  options?: ScraperLLMOptions
+  options?: ScraperLLMOptions & { output?: OUTPUT }
 ) {
   const content = prepareAISDKPage(page)
 
@@ -50,7 +59,7 @@ export async function generateAISDKCompletions<
     maxOutputTokens: options?.maxOutputTokens,
     topP: options?.topP,
     mode: options?.mode,
-    output: options?.output as 'object' | 'array' | 'enum' | 'no-schema',
+    output: options?.output,
   })
 
   return {
@@ -60,12 +69,17 @@ export async function generateAISDKCompletions<
 }
 
 export function streamAISDKCompletions<
-  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>
+  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>,
+  OUTPUT extends
+    | 'object'
+    | 'array'
+    | 'enum'
+    | 'no-schema' = InferSchema<SCHEMA> extends string ? 'enum' : 'object'
 >(
   model: LanguageModelV2,
   page: PreProcessResult,
   schema: SCHEMA,
-  options?: ScraperLLMOptions
+  options?: ScraperLLMOptions & { output?: OUTPUT }
 ) {
   const content = prepareAISDKPage(page)
 
@@ -80,6 +94,7 @@ export function streamAISDKCompletions<
     maxOutputTokens: options?.maxOutputTokens,
     topP: options?.topP,
     mode: options?.mode,
+    output: options?.output,
   })
 
   return {

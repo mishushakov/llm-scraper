@@ -1,6 +1,6 @@
 import { type Page } from 'playwright'
 import { LanguageModelV2 } from '@ai-sdk/provider'
-import { type FlexibleSchema } from '@ai-sdk/provider-utils'
+import { type FlexibleSchema, InferSchema } from '@ai-sdk/provider-utils'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
 import {
@@ -16,19 +16,12 @@ export type ScraperLLMOptions = {
   maxOutputTokens?: number
   topP?: number
   mode?: 'auto' | 'json' | 'tool'
-  output?: 'object' | 'array'
 }
 
 // Options for code generation
-export type ScraperGenerateOptions = Omit<
-  ScraperLLMOptions,
-  'output' | 'mode'
-> & {
+export type ScraperGenerateOptions = Omit<ScraperLLMOptions, 'mode'> & {
   format?: 'html' | 'raw_html'
 }
-
-// Combined options for running scraper
-export type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
 export default class LLMScraper {
   constructor(private client: LanguageModelV2) {
@@ -36,13 +29,20 @@ export default class LLMScraper {
   }
 
   // Run the scraper end-to-end
-  async run<S extends FlexibleSchema<unknown>>(
+  async run<
+    SCHEMA extends FlexibleSchema<unknown>,
+    OUTPUT extends
+      | 'object'
+      | 'array'
+      | 'enum'
+      | 'no-schema' = InferSchema<SCHEMA> extends string ? 'enum' : 'object'
+  >(
     page: Page,
-    schema: S,
-    options?: ScraperRunOptions
+    schema: SCHEMA,
+    options?: ScraperLLMOptions & { output?: OUTPUT } & PreProcessOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCompletions<S>(
+    return generateAISDKCompletions<SCHEMA, OUTPUT>(
       this.client,
       preprocessed,
       schema,
@@ -51,13 +51,25 @@ export default class LLMScraper {
   }
 
   // Stream partial results from the scraper
-  async stream<S extends FlexibleSchema<unknown>>(
+  async stream<
+    S extends FlexibleSchema<unknown>,
+    OUTPUT extends
+      | 'object'
+      | 'array'
+      | 'enum'
+      | 'no-schema' = InferSchema<S> extends string ? 'enum' : 'object'
+  >(
     page: Page,
     schema: S,
-    options?: ScraperRunOptions
+    options?: ScraperLLMOptions & { output?: OUTPUT } & PreProcessOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return streamAISDKCompletions<S>(this.client, preprocessed, schema, options)
+    return streamAISDKCompletions<S, OUTPUT>(
+      this.client,
+      preprocessed,
+      schema,
+      options
+    )
   }
 
   // Generate scraping code instead of data
