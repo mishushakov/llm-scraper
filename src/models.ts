@@ -58,7 +58,6 @@ export async function generateAISDKCompletions<
     temperature: options?.temperature,
     maxOutputTokens: options?.maxOutputTokens,
     topP: options?.topP,
-    mode: options?.mode,
     output: options?.output,
   })
 
@@ -93,7 +92,6 @@ export function streamAISDKCompletions<
     temperature: options?.temperature,
     maxOutputTokens: options?.maxOutputTokens,
     topP: options?.topP,
-    mode: options?.mode,
     output: options?.output,
   })
 

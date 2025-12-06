@@ -15,7 +15,6 @@ export type ScraperLLMOptions = {
   temperature?: number
   maxOutputTokens?: number
   topP?: number
-  mode?: 'auto' | 'json' | 'tool'
 }
 
 // Options for code generation
