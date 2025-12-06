@@ -1,7 +1,6 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 import { test, expect } from './index'
 import { jsonSchema } from 'ai'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 
 const storySchema = z.object({
   title: z.string(),
@@ -79,7 +78,7 @@ test('scrapes top 5 stories from Hacker News (json schema)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const m = jsonSchema<{ top: { title: string }[] }>(zodToJsonSchema(schema))
+  const m = jsonSchema<{ top: { title: string }[] }>(z.toJSONSchema(schema))
   const { data } = await scraper.run(page, m)
 
   expect(schema.safeParse(data).success).toBe(true)

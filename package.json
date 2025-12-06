@@ -27,15 +27,14 @@
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
     "@ai-sdk/provider": "^2.0.0",
-    "@alcyone-labs/zod-to-json-schema": "^4.0.10",
     "ai": "^5.0.93",
-    "ollama-ai-provider-v2": "^1.5.4",
     "turndown": "^7.2.0"
   },
   "devDependencies": {
     "@ai-sdk/openai": "^2.0.67",
     "@types/node": "^22.15.18",
     "@types/react": "^18.2.79",
+    "ollama-ai-provider-v2": "^1.5.5",
     "playwright": "^1.52.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.3",

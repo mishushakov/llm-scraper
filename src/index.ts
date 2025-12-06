@@ -1,7 +1,6 @@
 import { type Page } from 'playwright'
 import { LanguageModelV2 } from '@ai-sdk/provider'
-import { z } from 'zod'
-import { Schema as AiSchema } from 'ai'
+import { type FlexibleSchema } from '@ai-sdk/provider-utils'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
 import {
@@ -17,12 +16,13 @@ export type ScraperLLMOptions = {
   maxOutputTokens?: number
   topP?: number
   mode?: 'auto' | 'json' | 'tool'
+  output?: 'object' | 'array'
 }
 
 // Options for code generation
 export type ScraperGenerateOptions = Omit<
   ScraperLLMOptions,
-  'mode'
+  'output' | 'mode'
 > & {
   format?: 'html' | 'raw_html'
 }
@@ -30,22 +30,19 @@ export type ScraperGenerateOptions = Omit<
 // Combined options for running scraper
 export type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
-// Union schema type that matches models.ts
-export type ZodOrAiSchema<T> = z.ZodType<T> | AiSchema<T>
-
 export default class LLMScraper {
   constructor(private client: LanguageModelV2) {
     this.client = client
   }
 
   // Run the scraper end-to-end
-  async run<T>(
+  async run<S extends FlexibleSchema<unknown>>(
     page: Page,
-    schema: ZodOrAiSchema<T>,
+    schema: S,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCompletions(
+    return generateAISDKCompletions<S>(
       this.client,
       preprocessed,
       schema,
@@ -54,32 +51,22 @@ export default class LLMScraper {
   }
 
   // Stream partial results from the scraper
-  async stream<T>(
+  async stream<S extends FlexibleSchema<unknown>>(
     page: Page,
-    schema: ZodOrAiSchema<T>,
+    schema: S,
     options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return streamAISDKCompletions(
-      this.client,
-      preprocessed,
-      schema,
-      options
-    )
+    return streamAISDKCompletions<S>(this.client, preprocessed, schema, options)
   }
 
   // Generate scraping code instead of data
-  async generate<T>(
+  async generate<S extends FlexibleSchema<unknown>>(
     page: Page,
-    schema: ZodOrAiSchema<T>,
+    schema: S,
     options?: ScraperGenerateOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCode(
-      this.client,
-      preprocessed,
-      schema,
-      options
-    )
+    return generateAISDKCode<S>(this.client, preprocessed, schema, options)
   }
 }

@@ -1,18 +1,8 @@
-import { LanguageModelV2 } from '@ai-sdk/provider'
-import {
-  generateObject,
-  generateText,
-  streamObject,
-  UserContent,
-  Schema as AiSchema,
-} from 'ai'
-import { z, ZodTypeAny } from 'zod'
+import { LanguageModelV2, JSONValue } from '@ai-sdk/provider'
+import { generateObject, generateText, streamObject, UserContent } from 'ai'
+import { type FlexibleSchema, asSchema } from '@ai-sdk/provider-utils'
 import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
-import { zodToJsonSchema } from '@alcyone-labs/zod-to-json-schema'
-
-// Unified schema type
-type ZodOrAiSchema = ZodTypeAny | AiSchema<any>
 
 const defaultPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
@@ -39,25 +29,28 @@ function prepareAISDKPage(page: PreProcessResult): UserContent {
   return [{ type: 'text', text: page.content }]
 }
 
-export async function generateAISDKCompletions(
+export async function generateAISDKCompletions<
+  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>
+>(
   model: LanguageModelV2,
   page: PreProcessResult,
-  schema: ZodOrAiSchema,
+  schema: SCHEMA,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
 
-  const result = await generateObject<any>({
+  const result = await generateObject({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
       { role: 'user', content },
     ],
-    schema,
+    schema: schema,
     temperature: options?.temperature,
     maxOutputTokens: options?.maxOutputTokens,
     topP: options?.topP,
     mode: options?.mode,
+    output: options?.output as 'object' | 'array' | 'enum' | 'no-schema',
   })
 
   return {
@@ -66,15 +59,17 @@ export async function generateAISDKCompletions(
   }
 }
 
-export function streamAISDKCompletions(
+export function streamAISDKCompletions<
+  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>
+>(
   model: LanguageModelV2,
   page: PreProcessResult,
-  schema: ZodOrAiSchema,
+  schema: SCHEMA,
   options?: ScraperLLMOptions
 ) {
   const content = prepareAISDKPage(page)
 
-  const { partialObjectStream } = streamObject<any>({
+  const { partialObjectStream } = streamObject({
     model,
     messages: [
       { role: 'system', content: options?.prompt || defaultPrompt },
@@ -93,14 +88,14 @@ export function streamAISDKCompletions(
   }
 }
 
-export async function generateAISDKCode(
+export async function generateAISDKCode<S extends FlexibleSchema<unknown>>(
   model: LanguageModelV2,
   page: PreProcessResult,
-  schema: ZodOrAiSchema,
+  schema: S,
   options?: ScraperGenerateOptions
 ) {
-  const parsedSchema =
-    schema instanceof z.ZodType ? zodToJsonSchema(schema) : schema
+  const aiSchema = asSchema(schema)
+  const parsedSchema = aiSchema.jsonSchema
 
   const result = await generateText({
     model,
