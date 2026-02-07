@@ -1,6 +1,5 @@
 import { type Page } from 'playwright'
-import { type LanguageModel, type Output, type Prompt, type CallSettings } from 'ai'
-import { type FlexibleSchema } from '@ai-sdk/provider-utils'
+import { type LanguageModel, type Output, type Prompt, type CallSettings, ModelMessage } from 'ai'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
 import {
@@ -11,7 +10,8 @@ import {
 
 // Options for high-level LLM calls
 export type ScraperLLMOptions = CallSettings & {
-  prompt?: string
+  system?: string
+  messages?: ModelMessage[]
 }
 
 // Options for code generation

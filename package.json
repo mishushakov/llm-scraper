@@ -27,7 +27,6 @@
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
     "@ai-sdk/provider": "^3.0.8",
-    "@ai-sdk/provider-utils": "^4.0.14",
     "ai": "^6.0.77",
     "turndown": "^7.2.2"
   },

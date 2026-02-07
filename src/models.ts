@@ -4,14 +4,15 @@ import {
   type LanguageModel,
   type UserContent,
   type Output,
+  ModelMessage,
 } from 'ai'
 import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 
-const defaultPrompt =
+const systemPrompt =
   'You are a sophisticated web scraper. Extract the contents of the webpage'
 
-const defaultCodePrompt =
+const systemCodePrompt =
   "Provide a scraping function in JavaScript that extracts and returns data according to a schema from the current page. The function must be IIFE. No comments or imports. No console.log. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
 
 function stripMarkdownBackticks(text: string) {
@@ -41,15 +42,16 @@ export async function generateAISDKCompletions<OUTPUT extends Output.Output = Ou
 ) {
   const pageContent = prepareAISDKPage(page)
 
-  const { prompt = defaultPrompt, ...rest } = options || {}
-  const messages = [
-    { role: 'system' as const, content: prompt },
+  const { system = systemPrompt, messages: messagesOptions, ...rest } = options || {}
+  const messages: ModelMessage[] = [
     { role: 'user' as const, content: pageContent },
+    ...(messagesOptions || []),
   ]
 
   const result = await generateText({
     model,
     output,
+    system,
     messages,
     ...rest,
   })
@@ -68,15 +70,16 @@ export function streamAISDKCompletions<OUTPUT extends Output.Output = Output.Out
 ) {
   const pageContent = prepareAISDKPage(page)
 
-  const { prompt = defaultPrompt, ...rest } = options || {}
-  const messages = [
-    { role: 'system' as const, content: prompt },
+  const { system = systemPrompt, messages: messagesOptions, ...rest } = options || {}
+  const messages: ModelMessage[] = [
     { role: 'user' as const, content: pageContent },
+    ...(messagesOptions || []),
   ]
 
   const { partialOutputStream } = streamText({
     model,
     output,
+    system,
     messages,
     ...rest,
   })
@@ -101,19 +104,20 @@ export async function generateAISDKCode<OUTPUT extends Output.Output = Output.Ou
       ? (responseFormat as { schema: unknown }).schema
       : output
 
-  const { prompt = defaultCodePrompt, ...rest } = options || {}
+  const { system = systemCodePrompt, messages: messagesOptions, ...rest } = options || {}
   const messages = [
-    { role: 'system' as const, content: prompt },
     {
       role: 'user' as const,
       content: `Website: ${page.url}
       Schema: ${JSON.stringify(jsonSchema)}
       Content: ${page.content}`,
     },
+    ...(messagesOptions || []),
   ]
 
   const result = await generateText({
     model,
+    system,
     messages,
     ...rest,
   })
