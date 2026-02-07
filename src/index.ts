@@ -1,6 +1,6 @@
 import { type Page } from 'playwright'
 import { LanguageModelV2 } from '@ai-sdk/provider'
-import { type FlexibleSchema, InferSchema } from '@ai-sdk/provider-utils'
+import { type FlexibleSchema } from '@ai-sdk/provider-utils'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
 import {
@@ -30,11 +30,7 @@ export default class LLMScraper {
   // Run the scraper end-to-end
   async run<
     SCHEMA extends FlexibleSchema<unknown>,
-    OUTPUT extends
-      | 'object'
-      | 'array'
-      | 'enum'
-      | 'no-schema' = InferSchema<SCHEMA> extends string ? 'enum' : 'object'
+    OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
   >(
     page: Page,
     schema: SCHEMA,
@@ -52,11 +48,7 @@ export default class LLMScraper {
   // Stream partial results from the scraper
   async stream<
     S extends FlexibleSchema<unknown>,
-    OUTPUT extends
-      | 'object'
-      | 'array'
-      | 'enum'
-      | 'no-schema' = InferSchema<S> extends string ? 'enum' : 'object'
+    OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
   >(
     page: Page,
     schema: S,
