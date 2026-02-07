@@ -150,7 +150,7 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// Run the scraper (`output` is required)
+// Run the scraper
 const { data } = await scraper.run(page, Output.object({ schema }), {
   format: 'html',
 })
@@ -203,7 +203,7 @@ More examples can be found in the [examples](./examples) folder.
 
 ## Streaming
 
-Replace your `run` function with `stream` to get a partial object stream (Vercel AI SDK v6+).
+Replace your `run` function with `stream` to get a partial object stream.
 
 ```ts
 // Run the scraper in streaming mode
