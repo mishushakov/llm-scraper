@@ -1,6 +1,6 @@
-import { z } from 'zod/v4'
+import { z } from 'zod'
 import { test, expect } from './index'
-import { Output, jsonSchema } from 'ai'
+import { jsonSchema, Output } from 'ai'
 
 const storySchema = z.object({
   title: z.string(),
@@ -16,9 +16,7 @@ const schema = z.object({
 test('scrapes top 5 stories from Hacker News', async ({ page, scraper }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { data } = await scraper.run(page, {
-    output: Output.object({ schema }),
-  })
+  const { data } = await scraper.run(page, Output.object({ schema }))
 
   expect(schema.safeParse(data).success).toBe(true)
 })
@@ -29,9 +27,8 @@ test('scrapes top 5 stories from Hacker News (image format)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { data } = await scraper.run(page, {
+  const { data } = await scraper.run(page, Output.object({ schema }), {
     format: 'image',
-    output: Output.object({ schema }),
   })
 
   expect(schema.safeParse(data).success).toBe(true)
@@ -43,9 +40,8 @@ test('scrapes top 5 stories from Hacker News (markdown format)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { data } = await scraper.run(page, {
+  const { data } = await scraper.run(page, Output.object({ schema }), {
     format: 'markdown',
-    output: Output.object({ schema }),
   })
 
   expect(schema.safeParse(data).success).toBe(true)
@@ -57,9 +53,8 @@ test('scrapes top 5 stories from Hacker News (raw html)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { data } = await scraper.run(page, {
+  const { data } = await scraper.run(page, Output.object({ schema }), {
     format: 'raw_html',
-    output: Output.object({ schema }),
   })
 
   expect(schema.safeParse(data).success).toBe(true)
@@ -71,8 +66,8 @@ test('scrapes top 5 stories from Hacker News (code generation)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { code } = await scraper.generate(page, schema)
-  const result: z.infer<typeof schema> = await page.evaluate(code)
+  const { code } = await scraper.generate(page, Output.object({ schema }))
+  const result = await page.evaluate(code)
 
   expect(schema.safeParse(result).success).toBe(true)
 })
@@ -83,10 +78,8 @@ test('scrapes top 5 stories from Hacker News (json schema)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const m = jsonSchema<{ top: { title: string }[] }>(z.toJSONSchema(schema))
-  const { data } = await scraper.run(page, {
-    output: Output.object({ schema: m }),
-  })
+  const m = z.toJSONSchema(schema)
+  const { data } = await scraper.run(page, Output.object({ schema: m }))
 
   expect(schema.safeParse(data).success).toBe(true)
 })
@@ -94,13 +87,14 @@ test('scrapes top 5 stories from Hacker News (json schema)', async ({
 test('scrapes example.com (streaming)', async ({ page, scraper }) => {
   await page.goto('https://example.com')
 
-  const { stream } = await scraper.stream(page, {
-    output: Output.object({
+  const { stream } = await scraper.stream(
+    page,
+    Output.object({
       schema: z.object({
         h1: z.string().describe('The main heading of the page'),
-      }),
-    }),
-  })
+      })
+    })
+  )
 
   let text = ''
   for await (const item of stream) {
@@ -116,9 +110,8 @@ test('scrapes top stories from Hacker News (streaming, array)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const { stream } = await scraper.stream(page, {
+  const { stream } = await scraper.stream(page, Output.array({ element: storySchema }), {
     format: 'raw_html',
-    output: Output.array({ element: storySchema }),
   })
 
   let last: Partial<z.infer<typeof storySchema>>[] = []

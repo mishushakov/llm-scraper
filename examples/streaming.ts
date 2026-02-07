@@ -26,9 +26,8 @@ const schema = z.object({
 })
 
 // Run the scraper in streaming mode
-const { stream } = await scraper.stream(page, {
+const { stream } = await scraper.stream(page, Output.object({ schema }), {
   format: 'html',
-  output: Output.object({ schema }),
 })
 
 // Stream the result from LLM

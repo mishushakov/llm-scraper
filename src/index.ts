@@ -1,5 +1,5 @@
 import { type Page } from 'playwright'
-import { type LanguageModel, type Output } from 'ai'
+import { type LanguageModel, type Output, type Prompt, type CallSettings } from 'ai'
 import { type FlexibleSchema } from '@ai-sdk/provider-utils'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
@@ -10,11 +10,8 @@ import {
 } from './models.js'
 
 // Options for high-level LLM calls
-export type ScraperLLMOptions = {
+export type ScraperLLMOptions = CallSettings & {
   prompt?: string
-  temperature?: number
-  maxOutputTokens?: number
-  topP?: number
 }
 
 // Options for code generation
@@ -22,8 +19,7 @@ export type ScraperGenerateOptions = Omit<ScraperLLMOptions, 'mode'> & {
   format?: 'html' | 'raw_html'
 }
 
-type ScraperRunOptions<OUTPUT extends Output.Output = Output.Output<string, string>> =
-  ScraperLLMOptions & PreProcessOptions & { output: OUTPUT }
+type ScraperRunOptions = ScraperLLMOptions & PreProcessOptions
 
 export default class LLMScraper {
   constructor(private client: LanguageModel) {
@@ -32,27 +28,29 @@ export default class LLMScraper {
 
   async run<OUTPUT extends Output.Output = Output.Output<string, string>>(
     page: Page,
-    options: ScraperRunOptions<OUTPUT>
+    output: OUTPUT,
+    options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCompletions<OUTPUT>(this.client, preprocessed, options)
+    return generateAISDKCompletions<OUTPUT>(this.client, preprocessed, output, options)
   }
 
   async stream<OUTPUT extends Output.Output = Output.Output<string, string>>(
     page: Page,
-    options: ScraperRunOptions<OUTPUT>
+    output: OUTPUT,
+    options?: ScraperRunOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return streamAISDKCompletions<OUTPUT>(this.client, preprocessed, options)
+    return streamAISDKCompletions<OUTPUT>(this.client, preprocessed, output, options)
   }
 
   // Generate scraping code instead of data
-  async generate<S extends FlexibleSchema<unknown>>(
+  async generate<OUTPUT extends Output.Output = Output.Output<string, string>>(
     page: Page,
-    schema: S,
+    output: OUTPUT,
     options?: ScraperGenerateOptions
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCode<S>(this.client, preprocessed, schema, options)
+    return generateAISDKCode(this.client, preprocessed, output, options)
   }
 }

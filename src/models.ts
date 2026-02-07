@@ -5,7 +5,6 @@ import {
   type UserContent,
   type Output,
 } from 'ai'
-import { type FlexibleSchema, asSchema } from '@ai-sdk/provider-utils'
 import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 
@@ -34,30 +33,25 @@ function prepareAISDKPage(page: PreProcessResult): UserContent {
   return [{ type: 'text', text: page.content }]
 }
 
-export async function generateAISDKCompletions<
-  OUTPUT extends Output.Output = Output.Output<string, string>
->(
+export async function generateAISDKCompletions<OUTPUT extends Output.Output = Output.Output<string, string>>(
   model: LanguageModel,
   page: PreProcessResult,
-  options: ScraperLLMOptions & { output: OUTPUT }
+  output: OUTPUT,
+  options?: ScraperLLMOptions
 ) {
-  const content = prepareAISDKPage(page)
+  const pageContent = prepareAISDKPage(page)
 
+  const { prompt = defaultPrompt, ...rest } = options || {}
   const messages = [
-    { role: 'system' as const, content: options.prompt || defaultPrompt },
-    { role: 'user' as const, content },
+    { role: 'system' as const, content: prompt },
+    { role: 'user' as const, content: pageContent },
   ]
-  const baseOptions = {
-    model,
-    messages,
-    temperature: options.temperature,
-    maxOutputTokens: options.maxOutputTokens,
-    topP: options.topP,
-  }
 
   const result = await generateText({
-    ...baseOptions,
-    output: options.output,
+    model,
+    output,
+    messages,
+    ...rest,
   })
 
   return {
@@ -66,30 +60,25 @@ export async function generateAISDKCompletions<
   }
 }
 
-export function streamAISDKCompletions<
-  OUTPUT extends Output.Output = Output.Output<string, string>
->(
+export function streamAISDKCompletions<OUTPUT extends Output.Output = Output.Output<string, string>>(
   model: LanguageModel,
   page: PreProcessResult,
-  options: ScraperLLMOptions & { output: OUTPUT }
+  output: OUTPUT,
+  options?: ScraperLLMOptions
 ) {
-  const content = prepareAISDKPage(page)
+  const pageContent = prepareAISDKPage(page)
 
+  const { prompt = defaultPrompt, ...rest } = options || {}
   const messages = [
-    { role: 'system' as const, content: options.prompt || defaultPrompt },
-    { role: 'user' as const, content },
+    { role: 'system' as const, content: prompt },
+    { role: 'user' as const, content: pageContent },
   ]
-  const baseOptions = {
-    model,
-    messages,
-    temperature: options.temperature,
-    maxOutputTokens: options.maxOutputTokens,
-    topP: options.topP,
-  }
 
   const { partialOutputStream } = streamText({
-    ...baseOptions,
-    output: options.output,
+    model,
+    output,
+    messages,
+    ...rest,
   })
 
   return {
@@ -98,29 +87,35 @@ export function streamAISDKCompletions<
   }
 }
 
-export async function generateAISDKCode<S extends FlexibleSchema<unknown>>(
+export async function generateAISDKCode<OUTPUT extends Output.Output = Output.Output<string, string>>(
   model: LanguageModel,
   page: PreProcessResult,
-  schema: S,
+  output: OUTPUT,
   options?: ScraperGenerateOptions
 ) {
-  const aiSchema = asSchema(schema)
-  const parsedSchema = aiSchema.jsonSchema
+  const responseFormat = await output.responseFormat
+
+  // Extract JSON Schema from responseFormat (AI SDK already converts Zod schemas to JSON Schema)
+  const jsonSchema =
+    responseFormat.type === 'json' && 'schema' in responseFormat
+      ? (responseFormat as { schema: unknown }).schema
+      : output
+
+  const { prompt = defaultCodePrompt, ...rest } = options || {}
+  const messages = [
+    { role: 'system' as const, content: prompt },
+    {
+      role: 'user' as const,
+      content: `Website: ${page.url}
+      Schema: ${JSON.stringify(jsonSchema)}
+      Content: ${page.content}`,
+    },
+  ]
 
   const result = await generateText({
     model,
-    messages: [
-      { role: 'system', content: options?.prompt || defaultCodePrompt },
-      {
-        role: 'user',
-        content: `Website: ${page.url}
-        Schema: ${JSON.stringify(parsedSchema)}
-        Content: ${page.content}`,
-      },
-    ],
-    temperature: options?.temperature,
-    maxOutputTokens: options?.maxOutputTokens,
-    topP: options?.topP,
+    messages,
+    ...rest,
   })
 
   return {

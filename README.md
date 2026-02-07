@@ -5,12 +5,9 @@
 LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
 > [!IMPORTANT]
-> **LLM Scraper was updated to version 1.6.**
+> **LLM Scraper was updated to version 2.0.**
 >
-> The new version comes with Vercel AI SDK 6 support, JSON Schema, better type-safety, improved code generation and updated examples.
-
-> [!TIP]
-> Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction).
+> The new version comes with Vercel AI SDK 6 support and updated examples.
 
 ### Features
 
@@ -20,7 +17,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 - Based on Playwright framework
 - Streaming objects
 - [Code-generation](#code-generation)
-- Supports 4 formatting modes:
+- Supports 5 formatting modes:
   - `html` for loading pre-processed HTML
   - `raw_html` for loading raw HTML (no processing)
   - `markdown` for loading markdown
@@ -153,9 +150,8 @@ const schema = z.object({
 })
 
 // Run the scraper (`output` is required)
-const { data } = await scraper.run(page, {
+const { data } = await scraper.run(page, Output.object({ schema }), {
   format: 'html',
-  output: Output.object({ schema }),
 })
 
 // Show the result from LLM
@@ -210,9 +206,7 @@ Replace your `run` function with `stream` to get a partial object stream (Vercel
 
 ```ts
 // Run the scraper in streaming mode
-const { stream } = await scraper.stream(page, {
-  output: Output.object({ schema }),
-})
+const { stream } = await scraper.stream(page, Output.object({ schema }))
 
 // Stream the result from LLM
 for await (const data of stream) {
@@ -226,12 +220,12 @@ Using the `generate` function you can generate re-usable playwright script that 
 
 ```ts
 // Generate code and run it on the page
-const { code } = await scraper.generate(page, schema)
+const { code } = await scraper.generate(page, Output.object({ schema }))
 const result = await page.evaluate(code)
 const data = schema.parse(result)
 
 // Show the parsed result
-console.log(data.news)
+console.log(data.top)
 ```
 
 ## Contributing

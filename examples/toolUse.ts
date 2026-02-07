@@ -37,9 +37,7 @@ const { text } = await generateText({
         const schema = toJSONSchema(JSON.parse(jsonSchema))
 
         // Run the scraper
-        const result = await scraper.run(page, {
-          output: Output.object({ schema }),
-        })
+        const result = await scraper.run(page, Output.object({ schema }))
         await page.close()
         await browser.close()
 

@@ -23,9 +23,8 @@ const schema = z.object({
 })
 
 // Run the scraper
-const { data } = await scraper.run(page, {
+const { data } = await scraper.run(page, Output.object({ schema }), {
   format: 'html',
-  output: Output.object({ schema }),
 })
 
 console.log(data)

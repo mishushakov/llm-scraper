@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "llm-scraper",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Turn any webpage intro structured data using LLMs",
   "main": "dist/index.js",
   "scripts": {
@@ -35,7 +35,6 @@
     "@ai-sdk/openai": "^3.0.26",
     "@types/node": "^25.2.1",
     "@types/react": "^19.2.13",
-    "ollama-ai-provider-v2": "^3.0.4",
     "playwright": "^1.58.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18",
