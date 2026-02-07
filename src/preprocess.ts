@@ -27,18 +27,19 @@ export async function preprocess(
   options: PreProcessOptions = { format: 'html' }
 ): Promise<PreProcessResult> {
   const url = page.url()
+  const format = options.format ?? 'html'
   let content
 
-  if (options.format === 'raw_html') {
+  if (format === 'raw_html') {
     content = await page.content()
   }
 
-  if (options.format === 'markdown') {
+  if (format === 'markdown') {
     const body = await page.innerHTML('body')
     content = new Turndown().turndown(body)
   }
 
-  if (options.format === 'text') {
+  if (format === 'text') {
     const readable = await page.evaluate(async () => {
       const readability = await import(
         // @ts-ignore
@@ -51,19 +52,21 @@ export async function preprocess(
     content = `Page Title: ${readable.title}\n${readable.textContent}`
   }
 
-  if (options.format === 'html') {
+  if (format === 'html') {
     await page.evaluate(cleanup)
     content = await page.content()
   }
 
-  if (options.format === 'image') {
-    const image = await page.screenshot({ fullPage: options.fullPage })
+  if (format === 'image') {
+    const image = await page.screenshot({
+      fullPage: 'fullPage' in options ? options.fullPage : undefined,
+    })
     content = image.toString('base64')
   }
 
-  if (options.format === 'custom') {
+  if (format === 'custom') {
     if (
-      !options.formatFunction ||
+      !('formatFunction' in options) ||
       typeof options.formatFunction !== 'function'
     ) {
       throw new Error('customPreprocessor must be provided in custom mode')
@@ -75,6 +78,6 @@ export async function preprocess(
   return {
     url,
     content,
-    format: options.format,
+    format,
   }
 }

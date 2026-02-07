@@ -7,7 +7,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 > [!IMPORTANT]
 > **LLM Scraper was updated to version 1.6.**
 >
-> The new version comes with Vercel AI SDK 4 support, JSON Schema, better type-safety, improved code generation and updated examples.
+> The new version comes with Vercel AI SDK 6 support, JSON Schema, better type-safety, improved code generation and updated examples.
 
 > [!TIP]
 > Under the hood, it uses function calling to convert pages to structured data. You can find more about this approach [here](https://til.simonwillison.net/gpt3/openai-python-functions-data-extraction).
@@ -50,7 +50,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    ```js
    import { openai } from '@ai-sdk/openai'
 
-   const llm = openai.chat('gpt-4o')
+   const llm = openai('gpt-4o')
    ```
 
    **Anthropic**
@@ -96,11 +96,11 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    **Ollama**
 
    ```
-   npm i ollama-ai-provider
+   npm i ollama-ai-provider-v2
    ```
 
    ```js
-   import { ollama } from 'ollama-ai-provider'
+   import { ollama } from 'ollama-ai-provider-v2'
 
    const llm = ollama('llama3')
    ```
@@ -120,6 +120,7 @@ In this example, we're extracting top stories from HackerNews:
 ```ts
 import { chromium } from 'playwright'
 import { z } from 'zod'
+import { Output } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import LLMScraper from 'llm-scraper'
 
@@ -127,7 +128,7 @@ import LLMScraper from 'llm-scraper'
 const browser = await chromium.launch()
 
 // Initialize LLM provider
-const llm = openai.chat('gpt-4o')
+const llm = openai('gpt-4o')
 
 // Create a new LLMScraper
 const scraper = new LLMScraper(llm)
@@ -151,9 +152,10 @@ const schema = z.object({
     .describe('Top 5 stories on Hacker News'),
 })
 
-// Run the scraper
-const { data } = await scraper.run(page, schema, {
+// Run the scraper (`output` is required)
+const { data } = await scraper.run(page, {
   format: 'html',
+  output: Output.object({ schema }),
 })
 
 // Show the result from LLM
@@ -204,11 +206,13 @@ More examples can be found in the [examples](./examples) folder.
 
 ## Streaming
 
-Replace your `run` function with `stream` to get a partial object stream (Vercel AI SDK only).
+Replace your `run` function with `stream` to get a partial object stream (Vercel AI SDK v6+).
 
 ```ts
 // Run the scraper in streaming mode
-const { stream } = await scraper.stream(page, schema)
+const { stream } = await scraper.stream(page, {
+  output: Output.object({ schema }),
+})
 
 // Stream the result from LLM
 for await (const data of stream) {

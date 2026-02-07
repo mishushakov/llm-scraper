@@ -26,18 +26,19 @@
   },
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
-    "@ai-sdk/provider": "^2.0.0",
-    "ai": "^5.0.108",
+    "@ai-sdk/provider": "^3.0.8",
+    "@ai-sdk/provider-utils": "^4.0.14",
+    "ai": "^6.0.77",
     "turndown": "^7.2.2"
   },
   "devDependencies": {
-    "@ai-sdk/openai": "^2.0.77",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.7",
-    "ollama-ai-provider-v2": "^1.5.5",
-    "playwright": "^1.57.0",
+    "@ai-sdk/openai": "^3.0.26",
+    "@types/node": "^25.2.1",
+    "@types/react": "^19.2.13",
+    "ollama-ai-provider-v2": "^3.0.4",
+    "playwright": "^1.58.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.15",
-    "zod": "^4.1.13"
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
   }
 }

@@ -1,5 +1,5 @@
 import { type Page } from 'playwright'
-import { LanguageModelV2 } from '@ai-sdk/provider'
+import { type LanguageModel, type Output } from 'ai'
 import { type FlexibleSchema } from '@ai-sdk/provider-utils'
 
 import { preprocess, PreProcessOptions } from './preprocess.js'
@@ -22,45 +22,28 @@ export type ScraperGenerateOptions = Omit<ScraperLLMOptions, 'mode'> & {
   format?: 'html' | 'raw_html'
 }
 
+type ScraperRunOptions<OUTPUT extends Output.Output = Output.Output<string, string>> =
+  ScraperLLMOptions & PreProcessOptions & { output: OUTPUT }
+
 export default class LLMScraper {
-  constructor(private client: LanguageModelV2) {
+  constructor(private client: LanguageModel) {
     this.client = client
   }
 
-  // Run the scraper end-to-end
-  async run<
-    SCHEMA extends FlexibleSchema<unknown>,
-    OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
-  >(
+  async run<OUTPUT extends Output.Output = Output.Output<string, string>>(
     page: Page,
-    schema: SCHEMA,
-    options?: ScraperLLMOptions & { output?: OUTPUT } & PreProcessOptions
+    options: ScraperRunOptions<OUTPUT>
   ) {
     const preprocessed = await preprocess(page, options)
-    return generateAISDKCompletions<SCHEMA, OUTPUT>(
-      this.client,
-      preprocessed,
-      schema,
-      options
-    )
+    return generateAISDKCompletions<OUTPUT>(this.client, preprocessed, options)
   }
 
-  // Stream partial results from the scraper
-  async stream<
-    S extends FlexibleSchema<unknown>,
-    OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
-  >(
+  async stream<OUTPUT extends Output.Output = Output.Output<string, string>>(
     page: Page,
-    schema: S,
-    options?: ScraperLLMOptions & { output?: OUTPUT } & PreProcessOptions
+    options: ScraperRunOptions<OUTPUT>
   ) {
     const preprocessed = await preprocess(page, options)
-    return streamAISDKCompletions<S, OUTPUT>(
-      this.client,
-      preprocessed,
-      schema,
-      options
-    )
+    return streamAISDKCompletions<OUTPUT>(this.client, preprocessed, options)
   }
 
   // Generate scraping code instead of data

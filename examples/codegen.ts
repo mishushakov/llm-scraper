@@ -1,7 +1,7 @@
 import { chromium } from 'playwright'
 import { z } from 'zod'
 import { openai } from '@ai-sdk/openai'
-import LLMScraper from './../src'
+import LLMScraper from './../src/index.js'
 
 // Launch a browser instance
 const browser = await chromium.launch()

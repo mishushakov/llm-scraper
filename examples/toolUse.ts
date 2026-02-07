@@ -1,8 +1,14 @@
 import { openai } from '@ai-sdk/openai'
-import { generateText, jsonSchema as toJSONSChema, tool } from 'ai'
+import {
+  Output,
+  generateText,
+  jsonSchema as toJSONSchema,
+  stepCountIs,
+  tool,
+} from 'ai'
 import { chromium } from 'playwright'
 import { z } from 'zod'
-import LLMScraper from './../src'
+import LLMScraper from './../src/index.js'
 
 const model = openai('gpt-4o-mini')
 const scraper = new LLMScraper(model)
@@ -12,7 +18,7 @@ const { text } = await generateText({
   tools: {
     scrapeWebsite: tool({
       description: 'Scrape a website with a given schema and URL',
-      parameters: z.object({
+      inputSchema: z.object({
         url: z.string(),
         jsonSchema: z.string(),
       }),
@@ -28,10 +34,12 @@ const { text } = await generateText({
         await page.goto('https://news.ycombinator.com')
 
         // Parse jsonSchema
-        const schema = toJSONSChema(JSON.parse(jsonSchema))
+        const schema = toJSONSchema(JSON.parse(jsonSchema))
 
         // Run the scraper
-        const result = await scraper.run(page, schema)
+        const result = await scraper.run(page, {
+          output: Output.object({ schema }),
+        })
         await page.close()
         await browser.close()
 
@@ -40,7 +48,7 @@ const { text } = await generateText({
       },
     }),
   },
-  maxSteps: 2,
+  stopWhen: stepCountIs(2),
   prompt: 'List top stories from HackerNews frontpage and summarize them',
 })
 

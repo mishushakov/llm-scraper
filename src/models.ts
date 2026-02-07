@@ -1,16 +1,11 @@
-import { LanguageModelV2, JSONValue } from '@ai-sdk/provider'
 import {
-  DeepPartial,
-  generateObject,
   generateText,
-  streamObject,
-  UserContent,
+  streamText,
+  type LanguageModel,
+  type UserContent,
+  type Output,
 } from 'ai'
-import {
-  type FlexibleSchema,
-  InferSchema,
-  asSchema,
-} from '@ai-sdk/provider-utils'
+import { type FlexibleSchema, asSchema } from '@ai-sdk/provider-utils'
 import { ScraperLLMOptions, ScraperGenerateOptions } from './index.js'
 import { PreProcessResult } from './preprocess.js'
 
@@ -20,23 +15,11 @@ const defaultPrompt =
 const defaultCodePrompt =
   "Provide a scraping function in JavaScript that extracts and returns data according to a schema from the current page. The function must be IIFE. No comments or imports. No console.log. The code you generate will be executed straight away, you shouldn't output anything besides runnable code."
 
-type ObjectOutputMode = 'object' | 'array' | 'no-schema'
-type StreamItem<
-  SCHEMA extends FlexibleSchema<unknown>,
-  OUTPUT extends ObjectOutputMode
-> = OUTPUT extends 'array'
-  ? Array<InferSchema<SCHEMA>>
-  : DeepPartial<InferSchema<SCHEMA>>
-
 function stripMarkdownBackticks(text: string) {
   let trimmed = text.trim()
   trimmed = trimmed.replace(/^```(?:javascript)?\s*/i, '')
   trimmed = trimmed.replace(/\s*```$/i, '')
   return trimmed
-}
-
-function resolveObjectOutputMode(output?: ObjectOutputMode): ObjectOutputMode {
-  return output ?? 'object'
 }
 
 function prepareAISDKPage(page: PreProcessResult): UserContent {
@@ -52,91 +35,71 @@ function prepareAISDKPage(page: PreProcessResult): UserContent {
 }
 
 export async function generateAISDKCompletions<
-  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>,
-  OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
+  OUTPUT extends Output.Output = Output.Output<string, string>
 >(
-  model: LanguageModelV2,
+  model: LanguageModel,
   page: PreProcessResult,
-  schema: SCHEMA,
-  options?: ScraperLLMOptions & { output?: OUTPUT }
+  options: ScraperLLMOptions & { output: OUTPUT }
 ) {
   const content = prepareAISDKPage(page)
 
-  const output = resolveObjectOutputMode(options?.output)
   const messages = [
-    { role: 'system' as const, content: options?.prompt || defaultPrompt },
+    { role: 'system' as const, content: options.prompt || defaultPrompt },
     { role: 'user' as const, content },
   ]
   const baseOptions = {
     model,
     messages,
-    temperature: options?.temperature,
-    maxOutputTokens: options?.maxOutputTokens,
-    topP: options?.topP,
+    temperature: options.temperature,
+    maxOutputTokens: options.maxOutputTokens,
+    topP: options.topP,
   }
 
-  const result =
-    output === 'no-schema'
-      ? await generateObject({
-          ...baseOptions,
-          output: 'no-schema',
-        })
-      : await generateObject({
-          ...baseOptions,
-          schema,
-          output,
-        })
+  const result = await generateText({
+    ...baseOptions,
+    output: options.output,
+  })
 
   return {
-    data: result.object,
+    data: result.output,
     url: page.url,
   }
 }
 
 export function streamAISDKCompletions<
-  SCHEMA extends FlexibleSchema<unknown> = FlexibleSchema<JSONValue>,
-  OUTPUT extends 'object' | 'array' | 'no-schema' = 'object'
+  OUTPUT extends Output.Output = Output.Output<string, string>
 >(
-  model: LanguageModelV2,
+  model: LanguageModel,
   page: PreProcessResult,
-  schema: SCHEMA,
-  options?: ScraperLLMOptions & { output?: OUTPUT }
-): { stream: AsyncIterable<StreamItem<SCHEMA, OUTPUT>>; url: string } {
+  options: ScraperLLMOptions & { output: OUTPUT }
+) {
   const content = prepareAISDKPage(page)
 
-  const output = resolveObjectOutputMode(options?.output)
   const messages = [
-    { role: 'system' as const, content: options?.prompt || defaultPrompt },
+    { role: 'system' as const, content: options.prompt || defaultPrompt },
     { role: 'user' as const, content },
   ]
   const baseOptions = {
     model,
     messages,
-    temperature: options?.temperature,
-    maxOutputTokens: options?.maxOutputTokens,
-    topP: options?.topP,
+    temperature: options.temperature,
+    maxOutputTokens: options.maxOutputTokens,
+    topP: options.topP,
   }
 
-  const { partialObjectStream } =
-    output === 'no-schema'
-      ? streamObject({
-          ...baseOptions,
-          output: 'no-schema',
-        })
-      : streamObject({
-          ...baseOptions,
-          schema,
-          output,
-        })
+  const { partialOutputStream } = streamText({
+    ...baseOptions,
+    output: options.output,
+  })
 
   return {
-    stream: partialObjectStream as AsyncIterable<StreamItem<SCHEMA, OUTPUT>>,
+    stream: partialOutputStream,
     url: page.url,
   }
 }
 
 export async function generateAISDKCode<S extends FlexibleSchema<unknown>>(
-  model: LanguageModelV2,
+  model: LanguageModel,
   page: PreProcessResult,
   schema: S,
   options?: ScraperGenerateOptions

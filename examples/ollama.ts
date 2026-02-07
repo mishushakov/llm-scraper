@@ -1,7 +1,8 @@
 import { chromium } from 'playwright'
+import { Output } from 'ai'
 import { ollama } from 'ollama-ai-provider-v2'
 import { z } from 'zod'
-import LLMScraper from './../src'
+import LLMScraper from './../src/index.js'
 
 // Launch a browser instance
 const browser = await chromium.launch()
@@ -22,8 +23,9 @@ const schema = z.object({
 })
 
 // Run the scraper
-const { data } = await scraper.run(page, schema, {
+const { data } = await scraper.run(page, {
   format: 'html',
+  output: Output.object({ schema }),
 })
 
 console.log(data)
