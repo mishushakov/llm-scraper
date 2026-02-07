@@ -1,6 +1,6 @@
-import { z, toJSONSchema } from 'zod'
+import { z } from 'zod'
 import { test, expect } from './index'
-import { Output } from 'ai'
+import { Output, jsonSchema } from 'ai'
 
 const storySchema = z.object({
   title: z.string(),
@@ -78,9 +78,37 @@ test('scrapes top 5 stories from Hacker News (json schema)', async ({
 }) => {
   await page.goto('https://news.ycombinator.com')
 
-  const m = toJSONSchema(schema)
-  const { data } = await scraper.run(page, Output.object({ schema: m }))
+  // Define JSON schema directly (instead of using Zod)
+  const jsonSchemaDefinition = jsonSchema({
+    type: 'object',
+    properties: {
+      top: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            points: { type: 'number' },
+            by: { type: 'string' },
+            commentsURL: { type: 'string' },
+          },
+          required: ['title', 'points', 'by', 'commentsURL'],
+          additionalProperties: false,
+        },
+        minItems: 5,
+        maxItems: 5,
+      },
+    },
+    required: ['top'],
+    additionalProperties: false,
+  })
 
+  const { data } = await scraper.run(
+    page,
+    Output.object({ schema: jsonSchemaDefinition })
+  )
+
+  // Validate against the original Zod schema
   expect(schema.safeParse(data).success).toBe(true)
 })
 

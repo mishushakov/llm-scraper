@@ -7,7 +7,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 > [!IMPORTANT]
 > **LLM Scraper was updated to version 2.0.**
 >
-> The new version comes with Vercel AI SDK 6 support and updated examples.
+> The new version comes with **Vercel AI SDK 6** support and updated examples.
 
 ### Features
 
@@ -17,12 +17,13 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 - Based on Playwright framework
 - Streaming objects
 - [Code-generation](#code-generation)
-- Supports 5 formatting modes:
+- Supports 6 formatting modes:
   - `html` for loading pre-processed HTML
   - `raw_html` for loading raw HTML (no processing)
   - `markdown` for loading markdown
   - `text` for loading extracted text (using [Readability.js](https://github.com/mozilla/readability))
   - `image` for loading a screenshot (multi-modal only)
+  - `custom` for loading custom content (using a custom function)
 
 **Make sure to give it a star!**
 
