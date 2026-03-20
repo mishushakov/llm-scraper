@@ -4,6 +4,8 @@
 
 LLM Scraper is a TypeScript library that allows you to extract structured data from **any** webpage using LLMs.
 
+<div align="center"><strong><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></strong></div>
+
 > [!IMPORTANT]
 > **LLM Scraper was updated to version 2.0.**
 >
