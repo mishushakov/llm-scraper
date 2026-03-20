@@ -4,7 +4,7 @@
 
 LLM Scraper 是一个 TypeScript 库，允许您使用 LLM 从**任何**网页中提取结构化数据。
 
-[English](./README.md) | [简体中文](./README.zh-CN.md)
+<div align="center"><strong><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></strong></div>
 
 > [!IMPORTANT]
 > **LLM Scraper 已更新至 2.0 版本。**
