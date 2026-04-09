@@ -43,7 +43,7 @@ export async function preprocess(
     const readable = await page.evaluate(async () => {
       const readability = await import(
         // @ts-ignore
-        'https://cdn.skypack.dev/@mozilla/readability'
+        'https://cdn.jsdelivr.net/npm/@mozilla/readability@0.6.0/+esm'
       )
 
       return new readability.Readability(document).parse()
