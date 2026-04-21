@@ -11,7 +11,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
 
 ### Features
 
-- Supports GPT, Sonnet, Gemini, Llama, Qwen model series
+- Supports GPT, Sonnet, Gemini, Llama, Qwen, MiniMax model series
 - Schemas defined with Zod or JSON Schema
 - Full type-safety with TypeScript
 - Based on Playwright framework
@@ -89,6 +89,23 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
    })
 
    const llm = groq('llama3-8b-8192')
+   ```
+
+   **MiniMax**
+
+   ```
+   npm i @ai-sdk/openai
+   ```
+
+   ```js
+   import { createOpenAI } from '@ai-sdk/openai'
+   const minimax = createOpenAI({
+     baseURL: 'https://api.minimax.io/v1',
+     apiKey: process.env.MINIMAX_API_KEY,
+     compatibility: 'compatible',
+   })
+
+   const llm = minimax.chat('MiniMax-M2.7')
    ```
 
    **Ollama**
