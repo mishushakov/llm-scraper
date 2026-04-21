@@ -27,11 +27,14 @@
   "homepage": "https://github.com/mishushakov/llm-scraper#readme",
   "dependencies": {
     "@ai-sdk/provider": "^3.0.8",
+    "@mozilla/readability": "^0.6.0",
     "ai": "^6.0.77",
+    "jsdom": "^29.0.2",
     "turndown": "^7.2.2"
   },
   "devDependencies": {
     "@ai-sdk/openai": "^3.0.26",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^25.2.1",
     "@types/react": "^19.2.13",
     "playwright": "^1.58.2",
