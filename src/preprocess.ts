@@ -1,4 +1,6 @@
 import { type Page } from 'playwright'
+import { Readability } from '@mozilla/readability'
+import { JSDOM } from 'jsdom'
 import Turndown from 'turndown'
 
 import cleanup from './cleanup.js'
@@ -40,16 +42,16 @@ export async function preprocess(
   }
 
   if (format === 'text') {
-    const readable = await page.evaluate(async () => {
-      const readability = await import(
-        // @ts-ignore
-        'https://cdn.skypack.dev/@mozilla/readability'
-      )
+    const html = await page.content()
+    const dom = new JSDOM(html, { url })
+    const reader = new Readability(dom.window.document)
+    const article = reader.parse()
 
-      return new readability.Readability(document).parse()
-    })
-
-    content = `Page Title: ${readable.title}\n${readable.textContent}`
+    if (article) {
+      content = `Page Title: ${article.title}\n${article.textContent}`
+    } else {
+      content = await page.innerText('body')
+    }
   }
 
   if (format === 'html') {
