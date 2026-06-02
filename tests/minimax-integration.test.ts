@@ -8,10 +8,10 @@ import LLMScraper from '../src/index.js'
 
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY
 
-// Middleware for MiniMax M2.7:
+// Middleware for MiniMax:
 // 1. Downgrade json_schema to json_object (MiniMax doesn't support json_schema)
 // 2. Embed schema in system prompt so the model knows the expected format
-// 3. Strip <think>...</think> tags from responses
+// 3. Strip any <think>...</think> tags from responses (harmless if absent)
 function createMiniMaxModel(modelId: string, apiKey: string) {
   const minimax = createOpenAI({
     baseURL: 'https://api.minimax.io/v1',
@@ -90,7 +90,7 @@ describeIntegration('MiniMax integration tests', () => {
 
   beforeAll(async () => {
     browser = await chromium.launch({ channel: 'chrome' })
-    scraper = new LLMScraper(createMiniMaxModel('MiniMax-M2.7', MINIMAX_API_KEY!))
+    scraper = new LLMScraper(createMiniMaxModel('MiniMax-M3', MINIMAX_API_KEY!))
   }, 30000)
 
   afterAll(async () => {

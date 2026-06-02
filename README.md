@@ -105,7 +105,7 @@ LLM Scraper is a TypeScript library that allows you to extract structured data f
      compatibility: 'compatible',
    })
 
-   const llm = minimax.chat('MiniMax-M2.7')
+   const llm = minimax.chat('MiniMax-M3')
    ```
 
    **Ollama**

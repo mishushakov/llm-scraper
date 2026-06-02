@@ -11,13 +11,13 @@ const minimax = createOpenAI({
   compatibility: 'compatible',
 })
 
-// MiniMax M2.7 is a thinking model that wraps responses with <think> tags.
-// Use middleware to:
+// MiniMax uses the OpenAI-compatible API but does not support `json_schema`
+// response format. Use middleware to:
 // 1. Downgrade json_schema to json_object (MiniMax doesn't support json_schema)
 // 2. Embed the JSON schema in the system prompt so the model knows the format
-// 3. Strip <think> tags from responses for clean structured output
+// 3. Strip any <think>...</think> tags from responses (harmless if absent)
 const llm = wrapLanguageModel({
-  model: minimax.chat('MiniMax-M2.7'),
+  model: minimax.chat('MiniMax-M3'),
   middleware: {
     transformParams: async ({ params }) => {
       if (params.responseFormat?.type === 'json' && params.responseFormat?.schema) {

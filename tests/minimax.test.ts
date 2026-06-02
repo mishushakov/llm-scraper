@@ -13,6 +13,18 @@ describe('MiniMax provider configuration', () => {
     expect(typeof minimax).toBe('function')
   })
 
+  it('creates a chat model instance for MiniMax-M3', () => {
+    const minimax = createOpenAI({
+      baseURL: 'https://api.minimax.io/v1',
+      apiKey: 'test-key',
+      compatibility: 'compatible',
+    })
+
+    const model = minimax.chat('MiniMax-M3')
+    expect(model).toBeDefined()
+    expect(model.modelId).toBe('MiniMax-M3')
+  })
+
   it('creates a chat model instance for MiniMax-M2.7', () => {
     const minimax = createOpenAI({
       baseURL: 'https://api.minimax.io/v1',
@@ -47,7 +59,7 @@ describe('MiniMax provider configuration', () => {
       compatibility: 'compatible',
     })
 
-    const model = minimax.chat('MiniMax-M2.7')
+    const model = minimax.chat('MiniMax-M3')
     expect(model).toBeDefined()
 
     if (originalKey !== undefined) {
@@ -67,7 +79,7 @@ describe('MiniMax provider with LLMScraper', () => {
       compatibility: 'compatible',
     })
 
-    const scraper = new LLMScraper(minimax.chat('MiniMax-M2.7'))
+    const scraper = new LLMScraper(minimax.chat('MiniMax-M3'))
     expect(scraper).toBeDefined()
     expect(scraper).toBeInstanceOf(LLMScraper)
   })
